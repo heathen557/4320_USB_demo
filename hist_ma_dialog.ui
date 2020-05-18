@@ -1,0 +1,819 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>Hist_MA_Dialog</class>
+ <widget class="QDialog" name="Hist_MA_Dialog">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1204</width>
+    <height>731</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>MA功能界面</string>
+  </property>
+  <property name="windowIcon">
+   <iconset resource="imgsource.qrc">
+    <normaloff>:/new/prefix1/images/ccComputeStat.png</normaloff>:/new/prefix1/images/ccComputeStat.png</iconset>
+  </property>
+  <layout class="QGridLayout" name="gridLayout_4">
+   <item row="0" column="0">
+    <widget class="QGroupBox" name="groupBox">
+     <property name="maximumSize">
+      <size>
+       <width>200</width>
+       <height>16777215</height>
+      </size>
+     </property>
+     <property name="title">
+      <string>Custom Setting:</string>
+     </property>
+     <layout class="QGridLayout" name="gridLayout_13">
+      <item row="0" column="0">
+       <layout class="QHBoxLayout" name="horizontalLayout_2">
+        <item>
+         <widget class="QLabel" name="label_2">
+          <property name="text">
+           <string>binSize:</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QComboBox" name="binSize_comboBox">
+          <property name="currentIndex">
+           <number>3</number>
+          </property>
+          <item>
+           <property name="text">
+            <string>64</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>128</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>256</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>512</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>1024</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>4096</string>
+           </property>
+          </item>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item row="1" column="0">
+       <layout class="QHBoxLayout" name="horizontalLayout_4">
+        <item>
+         <widget class="QLabel" name="label_7">
+          <property name="text">
+           <string>exposure_num:</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLineEdit" name="exposure_num_lineEdit">
+          <property name="text">
+           <string>20</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item row="2" column="0">
+       <layout class="QHBoxLayout" name="horizontalLayout_3">
+        <item>
+         <widget class="QLabel" name="label_6">
+          <property name="text">
+           <string>Integration time：</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLineEdit" name="IntegrationTime_lineEdit">
+          <property name="text">
+           <string>1000</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item row="3" column="0">
+       <widget class="QPushButton" name="filters_pushButton">
+        <property name="text">
+         <string>filters</string>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="0">
+       <layout class="QHBoxLayout" name="horizontalLayout_5">
+        <item>
+         <widget class="QLabel" name="label_8">
+          <property name="text">
+           <string>windowSize:</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLabel" name="windowSize_label">
+          <property name="text">
+           <string>0</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignCenter</set>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item row="5" column="0">
+       <layout class="QHBoxLayout" name="horizontalLayout_6">
+        <item>
+         <widget class="QLabel" name="label_9">
+          <property name="text">
+           <string>current_Integrate:</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLabel" name="currentExposureNum_label">
+          <property name="text">
+           <string>0</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignCenter</set>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+     </layout>
+     <zorder>filters_pushButton</zorder>
+     <zorder>toolBox</zorder>
+    </widget>
+   </item>
+   <item row="0" column="1" rowspan="2">
+    <widget class="QFrame" name="frame">
+     <property name="frameShape">
+      <enum>QFrame::StyledPanel</enum>
+     </property>
+     <property name="frameShadow">
+      <enum>QFrame::Raised</enum>
+     </property>
+     <layout class="QGridLayout" name="gridLayout_9">
+      <item row="0" column="0">
+       <widget class="QGroupBox" name="MA_groupBox_1">
+        <property name="title">
+         <string>Pixel_1</string>
+        </property>
+        <layout class="QGridLayout" name="gridLayout_2" rowstretch="1,10">
+         <item row="0" column="0">
+          <layout class="QHBoxLayout" name="horizontalLayout_8">
+           <item>
+            <widget class="QLabel" name="label_3">
+             <property name="text">
+              <string>TOF:</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLabel" name="binningTof_label">
+             <property name="styleSheet">
+              <string notr="true">
+font: 10pt &quot;黑体&quot;;</string>
+             </property>
+             <property name="text">
+              <string>0</string>
+             </property>
+             <property name="alignment">
+              <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLabel" name="label_13">
+             <property name="text">
+              <string>PEAK:</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLabel" name="binningPeak_label">
+             <property name="styleSheet">
+              <string notr="true">font: 10pt &quot;黑体&quot;;</string>
+             </property>
+             <property name="text">
+              <string>0</string>
+             </property>
+             <property name="alignment">
+              <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <spacer name="horizontalSpacer">
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>223</width>
+               <height>17</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+           <item>
+            <widget class="QPushButton" name="save_MA1_pushButton">
+             <property name="text">
+              <string>save</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+         <item row="1" column="0">
+          <widget class="QCustomPlot" name="MA_1_widget" native="true">
+           <property name="styleSheet">
+            <string notr="true">background-color: rgb(0, 85, 255);</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QGroupBox" name="MA_groupBox_2">
+        <property name="title">
+         <string>Pixel_2</string>
+        </property>
+        <layout class="QGridLayout" name="gridLayout_6" rowstretch="1,10">
+         <item row="0" column="0">
+          <layout class="QHBoxLayout" name="horizontalLayout_9">
+           <item>
+            <widget class="QLabel" name="label_14">
+             <property name="text">
+              <string>TOF:</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLabel" name="binningTof_label_2">
+             <property name="styleSheet">
+              <string notr="true">font: 10pt &quot;黑体&quot;;</string>
+             </property>
+             <property name="text">
+              <string>0</string>
+             </property>
+             <property name="alignment">
+              <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLabel" name="label_15">
+             <property name="text">
+              <string>PEAK:</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLabel" name="binningPeak_label_2">
+             <property name="styleSheet">
+              <string notr="true">font: 10pt &quot;黑体&quot;;</string>
+             </property>
+             <property name="text">
+              <string>0</string>
+             </property>
+             <property name="alignment">
+              <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <spacer name="horizontalSpacer_2">
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>223</width>
+               <height>17</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+           <item>
+            <widget class="QPushButton" name="save_MA2_pushButton">
+             <property name="text">
+              <string>save</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+         <item row="1" column="0">
+          <widget class="QCustomPlot" name="MA_2_widget" native="true">
+           <property name="styleSheet">
+            <string notr="true">background-color: rgb(0, 85, 255);</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QGroupBox" name="MA_groupBox_3">
+        <property name="title">
+         <string>Pixel_3</string>
+        </property>
+        <layout class="QGridLayout" name="gridLayout_7" rowstretch="1,10">
+         <item row="0" column="0">
+          <layout class="QHBoxLayout" name="horizontalLayout_10">
+           <item>
+            <widget class="QLabel" name="label_16">
+             <property name="text">
+              <string>TOF:</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLabel" name="binningTof_label_3">
+             <property name="styleSheet">
+              <string notr="true">font: 10pt &quot;黑体&quot;;</string>
+             </property>
+             <property name="text">
+              <string>0</string>
+             </property>
+             <property name="alignment">
+              <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLabel" name="label_17">
+             <property name="text">
+              <string>PEAK:</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLabel" name="binningPeak_label_3">
+             <property name="styleSheet">
+              <string notr="true">font: 10pt &quot;黑体&quot;;</string>
+             </property>
+             <property name="text">
+              <string>0</string>
+             </property>
+             <property name="alignment">
+              <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <spacer name="horizontalSpacer_3">
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>223</width>
+               <height>17</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+           <item>
+            <widget class="QPushButton" name="save_MA3_pushButton">
+             <property name="text">
+              <string>save</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+         <item row="1" column="0">
+          <widget class="QCustomPlot" name="MA_3_widget" native="true">
+           <property name="styleSheet">
+            <string notr="true">background-color: rgb(0, 85, 255);</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="QGroupBox" name="MA_groupBox_4">
+        <property name="title">
+         <string>Pixel_4</string>
+        </property>
+        <layout class="QGridLayout" name="gridLayout_8" rowstretch="1,10">
+         <item row="0" column="0">
+          <layout class="QHBoxLayout" name="horizontalLayout_11">
+           <item>
+            <widget class="QLabel" name="label_18">
+             <property name="text">
+              <string>TOF:</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLabel" name="binningTof_label_4">
+             <property name="styleSheet">
+              <string notr="true">font: 10pt &quot;黑体&quot;;</string>
+             </property>
+             <property name="text">
+              <string>0</string>
+             </property>
+             <property name="alignment">
+              <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLabel" name="label_19">
+             <property name="text">
+              <string>PEAK:</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLabel" name="binningPeak_label_4">
+             <property name="styleSheet">
+              <string notr="true">font: 10pt &quot;黑体&quot;;</string>
+             </property>
+             <property name="text">
+              <string>0</string>
+             </property>
+             <property name="alignment">
+              <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <spacer name="horizontalSpacer_4">
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>223</width>
+               <height>17</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+           <item>
+            <widget class="QPushButton" name="save_MA1_pushButton_4">
+             <property name="text">
+              <string>save</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+         <item row="1" column="0">
+          <widget class="QCustomPlot" name="MA_4_widget" native="true">
+           <property name="styleSheet">
+            <string notr="true">background-color: rgb(0, 85, 255);</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item row="1" column="0">
+    <widget class="QToolBox" name="toolBox">
+     <property name="maximumSize">
+      <size>
+       <width>200</width>
+       <height>16777215</height>
+      </size>
+     </property>
+     <property name="currentIndex">
+      <number>1</number>
+     </property>
+     <widget class="QWidget" name="page">
+      <property name="geometry">
+       <rect>
+        <x>0</x>
+        <y>0</y>
+        <width>200</width>
+        <height>464</height>
+       </rect>
+      </property>
+      <attribute name="label">
+       <string>pixel</string>
+      </attribute>
+      <widget class="QGroupBox" name="groupBox_2">
+       <property name="geometry">
+        <rect>
+         <x>25</x>
+         <y>10</y>
+         <width>141</width>
+         <height>91</height>
+        </rect>
+       </property>
+       <property name="title">
+        <string>pixel_1：</string>
+       </property>
+       <layout class="QGridLayout" name="gridLayout_3">
+        <item row="0" column="0">
+         <widget class="QLabel" name="label_4">
+          <property name="text">
+           <string>row:</string>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="1">
+         <widget class="QComboBox" name="channel_1_row_comboBox"/>
+        </item>
+        <item row="1" column="0">
+         <widget class="QLabel" name="label_5">
+          <property name="text">
+           <string>col:</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="1">
+         <widget class="QComboBox" name="channel_1_col_comboBox"/>
+        </item>
+       </layout>
+      </widget>
+      <widget class="QPushButton" name="start_pushButton">
+       <property name="geometry">
+        <rect>
+         <x>29</x>
+         <y>140</y>
+         <width>121</width>
+         <height>20</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>start</string>
+       </property>
+      </widget>
+     </widget>
+     <widget class="QWidget" name="page_2">
+      <property name="geometry">
+       <rect>
+        <x>0</x>
+        <y>0</y>
+        <width>200</width>
+        <height>464</height>
+       </rect>
+      </property>
+      <attribute name="label">
+       <string>Binning</string>
+      </attribute>
+      <layout class="QGridLayout" name="gridLayout">
+       <item row="0" column="0">
+        <layout class="QHBoxLayout" name="horizontalLayout">
+         <item>
+          <widget class="QLabel" name="label">
+           <property name="text">
+            <string>channels：</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QComboBox" name="channels_comboBox">
+           <item>
+            <property name="text">
+             <string>1</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>2</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>3</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>4</string>
+            </property>
+           </item>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item row="1" column="0">
+        <layout class="QHBoxLayout" name="horizontalLayout_7">
+         <item>
+          <widget class="QLabel" name="label_10">
+           <property name="text">
+            <string>Size:</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QComboBox" name="binning_size_comboBox">
+           <item>
+            <property name="text">
+             <string>1x1</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>2x2</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>4X4</string>
+            </property>
+           </item>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item row="2" column="0">
+        <widget class="QGroupBox" name="binning_groupBox_1">
+         <property name="title">
+          <string>pixel_1：</string>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_5">
+          <property name="topMargin">
+           <number>2</number>
+          </property>
+          <property name="bottomMargin">
+           <number>2</number>
+          </property>
+          <item row="0" column="1">
+           <widget class="QComboBox" name="channel1_bin_row_comboBox"/>
+          </item>
+          <item row="1" column="0">
+           <widget class="QLabel" name="label_12">
+            <property name="text">
+             <string>col:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="QComboBox" name="channel1_bin_col_comboBox"/>
+          </item>
+          <item row="0" column="0">
+           <widget class="QLabel" name="label_11">
+            <property name="text">
+             <string>row:</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item row="3" column="0">
+        <widget class="QGroupBox" name="binning_groupBox_2">
+         <property name="title">
+          <string>pixel_2：</string>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_10">
+          <property name="topMargin">
+           <number>2</number>
+          </property>
+          <property name="bottomMargin">
+           <number>2</number>
+          </property>
+          <item row="0" column="1">
+           <widget class="QComboBox" name="channel2_bin_row_comboBox"/>
+          </item>
+          <item row="1" column="0">
+           <widget class="QLabel" name="label_20">
+            <property name="text">
+             <string>col:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="QComboBox" name="channel2_bin_col_comboBox"/>
+          </item>
+          <item row="0" column="0">
+           <widget class="QLabel" name="label_21">
+            <property name="text">
+             <string>row:</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item row="4" column="0">
+        <widget class="QGroupBox" name="binning_groupBox_3">
+         <property name="title">
+          <string>pixel_3：</string>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_11">
+          <property name="topMargin">
+           <number>2</number>
+          </property>
+          <property name="bottomMargin">
+           <number>2</number>
+          </property>
+          <item row="0" column="1">
+           <widget class="QComboBox" name="channel3_bin_row_comboBox"/>
+          </item>
+          <item row="1" column="0">
+           <widget class="QLabel" name="label_22">
+            <property name="text">
+             <string>col:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="QComboBox" name="channel3_bin_col_comboBox"/>
+          </item>
+          <item row="0" column="0">
+           <widget class="QLabel" name="label_23">
+            <property name="text">
+             <string>row:</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item row="5" column="0">
+        <widget class="QGroupBox" name="binning_groupBox_4">
+         <property name="title">
+          <string>pixel_4：</string>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_12">
+          <property name="topMargin">
+           <number>2</number>
+          </property>
+          <property name="bottomMargin">
+           <number>2</number>
+          </property>
+          <item row="0" column="1">
+           <widget class="QComboBox" name="channel4_bin_row_comboBox"/>
+          </item>
+          <item row="1" column="0">
+           <widget class="QLabel" name="label_24">
+            <property name="text">
+             <string>col:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="QComboBox" name="channel4_bin_col_comboBox"/>
+          </item>
+          <item row="0" column="0">
+           <widget class="QLabel" name="label_25">
+            <property name="text">
+             <string>row:</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item row="6" column="0">
+        <widget class="QPushButton" name="bin_start_pushButton">
+         <property name="text">
+          <string>start</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>QCustomPlot</class>
+   <extends>QWidget</extends>
+   <header>qcustomplot.h</header>
+   <container>1</container>
+  </customwidget>
+ </customwidgets>
+ <resources>
+  <include location="imgsource.qrc"/>
+ </resources>
+ <connections/>
+</ui>

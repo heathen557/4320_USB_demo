@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>aboutDialog</class>
+ <widget class="QDialog" name="aboutDialog">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>603</width>
+    <height>300</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>版本信息</string>
+  </property>
+  <property name="windowIcon">
+   <iconset resource="imgsource.qrc">
+    <normaloff>:/new/prefix1/images/dbViewportSymbol.png</normaloff>:/new/prefix1/images/dbViewportSymbol.png</iconset>
+  </property>
+  <widget class="QLabel" name="label">
+   <property name="geometry">
+    <rect>
+     <x>100</x>
+     <y>50</y>
+     <width>211</width>
+     <height>31</height>
+    </rect>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">font: 14pt &quot;Agency FB&quot;;</string>
+   </property>
+   <property name="text">
+    <string>版本信息：V1.4    （04-08）</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label_2">
+   <property name="geometry">
+    <rect>
+     <x>50</x>
+     <y>100</y>
+     <width>261</width>
+     <height>41</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>1、读取RowData数据（58、59、60、61）；</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label_3">
+   <property name="geometry">
+    <rect>
+     <x>50</x>
+     <y>140</y>
+     <width>401</width>
+     <height>41</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>2、滤波算法（peak卡尔曼、pileUp、tof卡尔曼、坐标转换、offset修正）</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label_4">
+   <property name="geometry">
+    <rect>
+     <x>50</x>
+     <y>180</y>
+     <width>391</width>
+     <height>41</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>3、焦距、TX/RX间距，积分次数本地文件读取</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label_5">
+   <property name="geometry">
+    <rect>
+     <x>50</x>
+     <y>220</y>
+     <width>391</width>
+     <height>41</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>4、滤波已经完善</string>
+   </property>
+  </widget>
+ </widget>
+ <resources>
+  <include location="imgsource.qrc"/>
+ </resources>
+ <connections/>
+</ui>
