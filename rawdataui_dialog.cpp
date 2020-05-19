@@ -40,12 +40,28 @@ void rawDataUI_Dialog::on_SelFilePath_pushButton_clicked()
 //!开始接收RawData数据，并开始保存
 void rawDataUI_Dialog::on_start_pushButton_clicked()
 {
-    exposure_num = ui->exposure_lineEdit->text().toInt();
-    rawData_saveFrameNums = ui->saveFrameNum_lineEdit->text().toInt();
-    rawData_savePath = ui->lineEdit->text();
-    qDebug()<<"on_start_pushButton_clicked()   exposure_num"<<exposure_num<<"    rawPath ="<<rawData_savePath;
+    if(ui->start_pushButton->text() == QStringLiteral("开始接收"))
+    {
+        exposure_num = ui->exposure_lineEdit->text().toInt();
+        rawData_saveFrameNums = ui->saveFrameNum_lineEdit->text().toInt();
+        rawData_savePath = ui->lineEdit->text();
+        qDebug()<<"on_start_pushButton_clicked()   exposure_num"<<exposure_num<<"    rawPath ="<<rawData_savePath;
 
-    emit on_start_rawDataSave_signal();
+        emit on_start_rawDataSave_signal(rawData_savePath);
 
-    this->hide();
+        ui->start_pushButton->setText(QStringLiteral("已开始接收"));
+    }
+
+
+
+
+}
+
+
+//!
+//! \brief rawDataUI_Dialog::send_savedFileIndex_slot
+//!显示已经存储了多少帧
+void rawDataUI_Dialog::send_savedFileIndex_slot(int frame)
+{
+    ui->frame_label->setText(QString::number(frame-1));
 }

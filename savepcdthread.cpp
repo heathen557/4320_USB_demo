@@ -63,6 +63,8 @@ void savePCDThread::saveTXTSlot(QString msgStr)
 // numOfFile：第几个文件
 void savePCDThread::writeTXT(QString text, int index)
 {
+//    qDebug()<<" savePCDThread::writeTXT(QString text, int index) come in ,saveFilePath = "<<saveFilePath;
+
     QString sFilePath = saveFilePath + QString::number(saveFileIndex-1)+".txt";
     saveFileIndex++;
     QFile file(sFilePath);

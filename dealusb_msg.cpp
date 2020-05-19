@@ -99,6 +99,10 @@ DealUsb_msg::DealUsb_msg(QObject *parent) : QObject(parent),
         peak_K[i] = 0;
 
 
+         tempRgbCloud.points[i].x = 0;
+         tempRgbCloud.points[i].y = 0;
+         tempRgbCloud.points[i].z = 0;
+
     }
     kalman_F = 1;
     kalman_H = 1;
@@ -1631,96 +1635,116 @@ void DealUsb_msg::receRawDataSave_slot(QByteArray array)
 {
     char *MyBuffer;
     MyBuffer = array.data();
-    current_id = (quint8)(MyBuffer[0]) +  (((quint8)(MyBuffer[1]))<<8);                     // 0,......曝光此时
-    current_package_num = (quint8)(MyBuffer[2]) +  (((quint8)(MyBuffer[3]))<<8);            // 0、1、2、3  包号码
-    //     qDebug()<<"current_id = "<<current_id<<"   current_package_num="<<current_package_num;
-
-
-    if(current_id< last_id  || isFirst_frame ==true)   //一帧数据已经解析完毕
+    if(isFirst_frame)
     {
+        current_id = (quint8)(MyBuffer[512]) +  (((quint8)(MyBuffer[513]))<<8);
+        isFirst_frame = false;
+        return;
+    }
+    int nextPackage_id = (quint8)(MyBuffer[512]) +  (((quint8)(MyBuffer[513]))<<8);
+    int data1 = (quint8)(MyBuffer[0]) +  (((quint8)(MyBuffer[1]))<<8);
+//    qDebug()<<"current_id="<<current_id<<"  nextPackage_id="<<nextPackage_id<<"  data1="<<data1;
+
+
+    if(current_id < last_id) //一帧数据已经接收完毕
+    {
+
         if(frame_index>rawData_saveFrameNums)
             return;
 
+        frame_index++;
 
-        if(!isFirst_frame)
-            frame_index++;
-        emit create_rawData_Dir_signal(frame_index);      //传递参数（帧数），在rawdata 帧数文件夹，然后在文件夹下建立0-159行数据
-
-        isFirst_frame =false;
-
-        QString log_str = "[Recevive RawData frame:]" + QString::number(frame_index);
-        emit Display_log_signal(log_str);
-    }
-
-    hongPixel_line = current_id/(4*exposure_num);   //4*20次曝光   //曝光次数可以设置       0....29
-    pixel_index = current_id%(4*exposure_num)/exposure_num;
-
-    int mic_line = pixel_index/2;  //宏像素的第一行 还是第二行
-    int mic_col = pixel_index%2;   //宏像素的第一列 还是第二列
-    row_up = 59 - ( 2*hongPixel_line + mic_line);      //上半部分像素所在的行
-    row_down = 60 + ( 2*hongPixel_line + mic_line);    //下班部分像素所在的行
-
-    if(hongPixel_line != 0)          //只存储59、60行的数据
-        return;
-
-    int col;    //像素所在的列
-    int tmpValue_1,tmpValue_2,tmpValue_3,tmpValue_4;
-    for(int i=0; i<40; i++)
-    {
-        if(i<20)     //上半区
+        //一帧已经接收完毕 ，开启保存
+        for(int i=0; i<16384; i++)
         {
-            col = mic_col + current_package_num*2 + i*8;         //0 8 16 24 ..... 152
-
-            //            qDebug()<<"col = "<<col;
-
-            tmpValue_1 = quint8(MyBuffer[4 + i*2 ]) + ((quint8(MyBuffer[4 + i*2+1]))<<8);;
-            rawData_row_up[col] = QString::number(tmpValue_1);
-            rawData_row_up[col].append(",");
-            tmpValue_2 = quint8(MyBuffer[4 +80+ i*2 ]) + ((quint8(MyBuffer[4 + 80+ i*2+1]))<<8);
-            rawData_row_up[col].append(QString::number(tmpValue_2)).append(",");
-            tmpValue_3 = quint8(MyBuffer[4 +160+ i*2 ]) + ((quint8(MyBuffer[4 + 160+ i*2+1]))<<8);
-            rawData_row_up[col].append(QString::number(tmpValue_3)).append(",");
-            tmpValue_4 = quint8(MyBuffer[4 +240+ i*2 ]) + ((quint8(MyBuffer[4 + 240+ i*2+1]))<<8);
-            rawData_row_up[col].append(QString::number(tmpValue_4)).append(",");
-
-
-        }else        //下半区
-        {
-            col = mic_col + current_package_num*2 + (i-20)*8;    //0 8 16 24  ..... 152
-
-            tmpValue_1 = quint8(MyBuffer[4 + i*2 ]) + ((quint8(MyBuffer[4 + i*2+1]))<<8);;
-            rawData_row_down[col] = QString::number(tmpValue_1);
-            rawData_row_down[col].append(",");
-            tmpValue_2 = quint8(MyBuffer[4 +80+ i*2 ]) + ((quint8(MyBuffer[4 + 80+ i*2+1]))<<8);
-            rawData_row_down[col].append(QString::number(tmpValue_2)).append(",");
-            tmpValue_3 = quint8(MyBuffer[4 +160+ i*2 ]) + ((quint8(MyBuffer[4 + 160+ i*2+1]))<<8);
-            rawData_row_down[col].append(QString::number(tmpValue_3)).append(",");
-            tmpValue_4 = quint8(MyBuffer[4 +240+ i*2 ]) + ((quint8(MyBuffer[4 + 240+ i*2+1]))<<8);
-            rawData_row_down[col].append(QString::number(tmpValue_4)).append(",");
+           rawDataResult_str.append(rawDataSingle_str[i]).append('\n');
+           rawDataSingle_str[i].clear();
         }
+        emit saveTXTSignal(rawDataResult_str);
+        rawDataResult_str.clear();
+
+
+        if(frame_index>1)
+        {
+            QString log_str = "[Recevive RawData frame:]" + QString::number(frame_index-1);
+            emit Display_log_signal(log_str);
+        }
+
+
     }
 
 
 
-    //一个包数据接收完毕之后，就开始存储
-    for(int k=0;k<160;k++)
+    //开始解析单包的数据
+    int hongPixel_line = current_id/exposure_num%32;      //  0...31
+    int pixel_index = current_id/exposure_num/32;        //  0....7
+
+    int mic_line = pixel_index%2;   //宏像素的第一行 还是第二行   0  /  1
+    int mic_col = pixel_index/2;   //宏像素的 第一列、第二列、第三列、第四列
+
+    int pixel_row = hongPixel_line * 2 + mic_line;      //微像素所在的行
+//    qDebug()<<"hongPixel_line = "<<hongPixel_line<<" pixel_index= "<<pixel_index<<"  pixel_row = "<<pixel_row<<"   mic_col = "<<mic_col;
+
+
+    int index = 0;
+    int tmpValue_0_1 = 0,tmpValue_0_2 = 0,tmpValue_0_3 = 0,tmpValue_0_4 = 0;
+    int tmpValue_1_1 = 0,tmpValue_1_2 = 0,tmpValue_1_3 = 0,tmpValue_1_4 = 0;
+    int tmpValue_2_1 = 0,tmpValue_2_2 = 0,tmpValue_2_3 = 0,tmpValue_2_4 = 0;
+    int tmpValue_3_1 = 0,tmpValue_3_2 = 0,tmpValue_3_3 = 0,tmpValue_3_4 = 0;
+    int cloudIndex = 0;
+    for(int i=0; i<32; i+=2)   //每包包含16个数据 也就是32个字节  index =0...15
     {
-        rawData_row_upList.append(rawData_row_up[k]);
-        rawData_row_downList.append(rawData_row_down[k]);
-        rawData_row_up[k].clear();
-        rawData_row_down[k].clear();
+        tmpValue_0_1 = (quint8)(MyBuffer[i]) +  (((quint8)(MyBuffer[i+1]))<<8);
+        tmpValue_0_2 = (quint8)(MyBuffer[32+i]) +  (((quint8)(MyBuffer[32+i+1]))<<8);
+        tmpValue_0_3 = (quint8)(MyBuffer[64+i]) +  (((quint8)(MyBuffer[64+i+1]))<<8);
+        tmpValue_0_4 = (quint8)(MyBuffer[96+i]) +  (((quint8)(MyBuffer[96+i+1]))<<8);
+        cloudIndex = pixel_row*256 + mic_col + (4*(index))*4 + 0*4;  //4代表宏像素的四列  4代表相隔4个TDC
+        rawDataSingle_str[cloudIndex].append(QString::number(tmpValue_0_1)).append(" ").append(QString::number(tmpValue_0_2)).append(" ").append(QString::number(tmpValue_0_3)).append(" ").append(QString::number(tmpValue_0_4)).append(" ");
+//        qDebug()<<"cloudIndex_1 = "<<cloudIndex;
+
+        tmpValue_1_1 = (quint8)(MyBuffer[128+i]) +  (((quint8)(MyBuffer[128+i+1]))<<8);
+        tmpValue_1_2 = (quint8)(MyBuffer[128+32+i]) +  (((quint8)(MyBuffer[128+32+i+1]))<<8);
+        tmpValue_1_3 = (quint8)(MyBuffer[128+64+i]) +  (((quint8)(MyBuffer[128+64+i+1]))<<8);
+        tmpValue_1_4 = (quint8)(MyBuffer[128+96+i]) +  (((quint8)(MyBuffer[128+96+i+1]))<<8);
+        cloudIndex = pixel_row*256 + mic_col + (4*(index))*4 + 1*4;
+        rawDataSingle_str[cloudIndex].append(QString::number(tmpValue_1_1)).append(" ").append(QString::number(tmpValue_1_2)).append(" ").append(QString::number(tmpValue_1_3)).append(" ").append(QString::number(tmpValue_1_4)).append(" ");
+//        qDebug()<<"cloudIndex_2 = "<<cloudIndex;
+
+        tmpValue_2_1 = (quint8)(MyBuffer[256+i]) +  (((quint8)(MyBuffer[256+i+1]))<<8);
+        tmpValue_2_2 = (quint8)(MyBuffer[256+32+i]) +  (((quint8)(MyBuffer[256+32+i+1]))<<8);
+        tmpValue_2_3 = (quint8)(MyBuffer[256+64+i]) +  (((quint8)(MyBuffer[256+64+i+1]))<<8);
+        tmpValue_2_4 = (quint8)(MyBuffer[256+96+i]) +  (((quint8)(MyBuffer[256+96+i+1]))<<8);
+        cloudIndex = pixel_row*256 + mic_col + (4*(index))*4 + 2*4;
+        rawDataSingle_str[cloudIndex].append(QString::number(tmpValue_2_1)).append(" ").append(QString::number(tmpValue_2_2)).append(" ").append(QString::number(tmpValue_2_3)).append(" ").append(QString::number(tmpValue_2_4)).append(" ");
+//        qDebug()<<"cloudIndex_3 = "<<cloudIndex;
+
+        tmpValue_3_1 = (quint8)(MyBuffer[384+i]) +  (((quint8)(MyBuffer[384+i+1]))<<8);
+        tmpValue_3_2 = (quint8)(MyBuffer[384+32+i]) +  (((quint8)(MyBuffer[384+32+i+1]))<<8);
+        tmpValue_3_3 = (quint8)(MyBuffer[384+64+i]) +  (((quint8)(MyBuffer[384+64+i+1]))<<8);
+        tmpValue_3_4 = (quint8)(MyBuffer[384+96+i]) +  (((quint8)(MyBuffer[384+96+i+1]))<<8);
+        cloudIndex = pixel_row*256 + mic_col + (4*(index))*4 + 3*4;
+        rawDataSingle_str[cloudIndex].append(QString::number(tmpValue_3_1)).append(" ").append(QString::number(tmpValue_3_2)).append(" ").append(QString::number(tmpValue_3_3)).append(" ").append(QString::number(tmpValue_3_4)).append(" ");
+//        qDebug()<<"cloudIndex_4 = "<<cloudIndex;
+
+
+        index++;
     }
-    //    emit start_saveRawDataUp_signal(frame_index,row_up,rawData_row_upList);     //发送某一行的行数， 然后把一行160个数据都发送给数据处理线程
-    //    emit start_saveRawDataDown_signal(frame_index,row_down,rawData_row_downList);
-    emit start_saveRawDataUp_signal(0,row_up,rawData_row_upList);     //发送某一行的行数， 然后把一行160个数据都发送给数据处理线程
-    emit start_saveRawDataDown_signal(0,row_down,rawData_row_downList);
-
-
-
-    rawData_row_upList.clear();
-    rawData_row_downList.clear();
 
     last_id = current_id;
+    current_id  = nextPackage_id;
+
+}
+
+
+//开始接收rowData数据
+void DealUsb_msg::on_start_rawDataSave_slot(QString fiePath)
+{
+//    currentRawDataFrame = 0;
+    saveFilePath = fiePath;   //保存的路径  E:/..../.../的形式
+    saveFileIndex = 1;      //文件标号；1作为开始
+    qDebug()<<"rawData's savePath = "<<fiePath;
+
+
 }
 
 

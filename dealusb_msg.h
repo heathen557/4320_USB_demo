@@ -115,6 +115,11 @@ public:
     QString rawData_row_down[160];
     QStringList rawData_row_upList;
     QStringList rawData_row_downList;
+
+    QString rawDataSingle_str[16384];
+    QString rawDataResult_str;
+
+
     int row_up;
     int row_down;
 
@@ -184,7 +189,7 @@ public slots:
 
     /***************************RAW DATA**************************************/
     void receRawDataSave_slot(QByteArray);
-
+    void on_start_rawDataSave_slot(QString);
 
     /****************** RawData MA 相关 **********************************/
     void start_RowDatahistogram_slot(int exposureNum, int IntegrationNum,int row,int col,bool flag);   //行、列、 开启关闭标识

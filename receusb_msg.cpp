@@ -325,7 +325,6 @@ void ReceUSB_Msg::read_usb()
         //        ret = usb_interrupt_read(devHandle,129,MyBuffer,sizeof(MyBuffer),3000);
         ret = usb_bulk_read(devHandle, 129, MyBuffer, sizeof(MyBuffer), 3000);       //此处延迟设置为3000，经过测试设置为1的时候，ret<0,程序报错退出
 
-
         mArray = QByteArray(MyBuffer,ret);
         if(4 == ret)
         {
@@ -336,7 +335,12 @@ void ReceUSB_Msg::read_usb()
             tmpArray.append(mArray);
             emit recvMsgSignal(tmpArray);
             tmpArray.clear();
-        }else if (ret < 0)
+        }else if(516 == ret)
+        {
+            emit receRawDataSave_signal(mArray);
+
+        }
+        else if (ret < 0)
         {
             qDebug("**************************************************error reading:%s", usb_strerror());
             emit linkInfoSignal(2);  //  2:没有接收到数据
@@ -464,6 +468,36 @@ void ReceUSB_Msg::writeSysSlot(int addr,QString data,bool recvFlag)
     read_usb();
 }
 
+//!
+//! \brief ReceUSB_Msg::sendUsbToRead_inteTime_slot
+//! \param address
+//! \param recvFlag   address 是十进制数  recvFlag = false
+//!读取积分次数的槽函数
+void ReceUSB_Msg::sendUsbToRead_inteTime_slot(int address,bool recvFlag)
+{
+     QString array;
+
+     bool res = System_Register_Read(address,array);
+     qDebug()<<"[R]sys Read array="<<array<<"   res="<<res<<endl;
+     //系统注册 写入测试
+
+     if(res)
+     {
+         emit  returnSendUsbToRead_inteTime_signal(address,array);
+         int data = array.toInt();
+         QString log_str = "[Read sys Reg success]:addr="+QString::number(address,16)+",value="+QString("%1").arg(data,2,16,QChar('0')).toUpper();
+         emit Display_log_signal(log_str);
+     }else
+     {
+         emit linkInfoSignal(5);
+     }
+
+     isRecvFlag = recvFlag;
+     read_usb();
+}
+
+
+
 
 
 //! \brief ReceUSB_Msg::readDevSlot //读取设备寄存器槽函数
@@ -492,7 +526,6 @@ void ReceUSB_Msg::readDevSlot(int id,int address,bool recvFlag)
     isRecvFlag = recvFlag;
     read_usb();
 }
-
 
 
 //写入设备寄存器槽函数
@@ -764,7 +797,7 @@ void ReceUSB_Msg::start_read_usbImage_slot()
 //!
 //! \brief ReceUSB_Msg::on_start_rawDataSave_slot
 //!开始接收rawData的模式
-void ReceUSB_Msg::on_start_rawDataSave_slot()
+void ReceUSB_Msg::on_start_rawDataSave_slot(QString)
 {
     qDebug()<<"ReceUSB_Msg::on_start_rawDataSave_slot()";
     isRawDataSave_flag = 1;

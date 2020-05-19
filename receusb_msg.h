@@ -103,6 +103,12 @@ signals:
     void receRawData_MA_signal(QByteArray);     //MA 算法相关
 
 
+    /************************/
+    void returnSendUsbToRead_inteTime_signal(int,QString);
+
+
+
+
 public slots:
     void openLinkDevSlot(int vId, int pId);          //打开设备连接的槽函数
     void closeUSB();
@@ -120,10 +126,13 @@ public slots:
 
 
 
-    void on_start_rawDataSave_slot();   //开启rowData数据接收
+    void on_start_rawDataSave_slot(QString);   //开启rowData数据接收
 
     void start_receRowDataMA_slot();   //开启MA 接收
 
+
+    /*********读取积分次数相关****************/
+    void sendUsbToRead_inteTime_slot(int address,bool recvFlag);
 
 };
 

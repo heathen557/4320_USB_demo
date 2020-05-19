@@ -44,7 +44,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
 
     ui->Hist_MA_action->setVisible(false);
-    ui->RawData_action->setVisible(false);
+//    ui->RawData_action->setVisible(false);
 
     frameCount  = 0 ;     //帧率
     isLinkSuccess = false;     //USB 连接是否成功的标识
@@ -173,8 +173,12 @@ void MainWindow::init_connect()
 
 
     //rawData数据接收相关的槽函数
-    connect(&rawData_dia,SIGNAL(on_start_rawDataSave_signal()),recvUsbMsg_obj,SLOT(on_start_rawDataSave_slot()));
+    connect(&rawData_dia,SIGNAL(on_start_rawDataSave_signal(QString)),recvUsbMsg_obj,SLOT(on_start_rawDataSave_slot(QString)));
+    connect(&rawData_dia,&rawDataUI_Dialog::on_start_rawDataSave_signal,dealMsg_obj,&DealUsb_msg::on_start_rawDataSave_slot);
+
     connect(recvUsbMsg_obj,SIGNAL(receRawDataSave_signal(QByteArray)),dealMsg_obj,SLOT(receRawDataSave_slot(QByteArray)));
+    connect(savePcd_obj,&savePCDThread::send_savedFileIndex_signal,&rawData_dia,&rawDataUI_Dialog::send_savedFileIndex_slot);
+
     connect(dealMsg_obj,SIGNAL(create_rawData_Dir_signal(int)),savePcd_obj,SLOT(create_rawData_Dir_slot(int)));
     connect(dealMsg_obj,SIGNAL(create_rawData_Dir_signal(int)),savePcd_obj_2,SLOT(create_rawData_Dir_slot(int)));
     connect(dealMsg_obj,SIGNAL(start_saveRawDataUp_signal(int,int,QStringList)),savePcd_obj,SLOT(start_saveRawData_slot(int,int,QStringList)));
@@ -191,6 +195,14 @@ void MainWindow::init_connect()
 //    connect(recvUsbMsg_obj,SIGNAL(receRawData_MA_signal(QByteArray)),dealMsg_obj,SLOT(receRawData_MA_slot(QByteArray)));
 //    connect(dealMsg_obj,SIGNAL(toShowHistogram_signal(QVector<double>,int)),&histMA_dia,SLOT(toShowHistogram_slot(QVector<double>,int)));
 //    connect(dealMsg_obj,SIGNAL(currentFrame_signal(int)),&histMA_dia,SLOT(currentFrame_slot(int)));
+
+
+    //读取积分次数相关的信号与槽函数的连接
+    connect(this,&MainWindow::sendUsbToRead_inteTime_signal,recvUsbMsg_obj,&ReceUSB_Msg::sendUsbToRead_inteTime_slot);
+    connect(recvUsbMsg_obj,&ReceUSB_Msg::returnSendUsbToRead_inteTime_signal,this,&MainWindow::returnSendUsbToRead_inteTime_slot);
+
+
+
 
 
 }
@@ -824,3 +836,34 @@ void MainWindow::on_startLineNum_comboBox_currentTextChanged(const QString &arg1
 {
 
 }
+
+//!
+//! \brief MainWindow::beginRead_inteTime
+//!开始读取积分次数的额槽函数
+void MainWindow::beginRead_inteTime()
+{
+    int regist_int = 135;   //0x87
+
+    emit sendUsbToRead_inteTime_signal(regist_int,isRecvFlag);
+}
+
+//!
+//! \brief MainWindow::returnSendUsbToRead_inteTime_slot
+//! 读取的指令返回信息
+void MainWindow::returnSendUsbToRead_inteTime_slot(int registInt,QString array)
+{
+    qDebug()<<" registInt =  "<<registInt<<"  array = "<<array;
+    if(135 == registInt)
+    {
+        inteTime[0] = array.toInt();
+        int regist_int = 136;
+        emit sendUsbToRead_inteTime_signal(regist_int,isRecvFlag);
+    }else if(136 == registInt)
+    {
+        inteTime[1] = array.toInt();
+        int intergerTime = ((inteTime[0]&0x30)<<8)+inteTime[1];
+        qDebug()<<QStringLiteral("通过读取USB获取到的积分次数integrateTime = ")<<intergerTime;
+    }
+
+}
+

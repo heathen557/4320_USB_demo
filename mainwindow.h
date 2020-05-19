@@ -134,6 +134,11 @@ private slots:
 
     void on_startLineNum_comboBox_currentTextChanged(const QString &arg1);
 
+
+    //获取积分次数的槽函数
+    void beginRead_inteTime();
+    void returnSendUsbToRead_inteTime_slot(int,QString);
+
 signals:
     void change_gain_signal(float);
     void change_tof_peak_signal();
@@ -149,6 +154,10 @@ signals:
     void start_read_usb_signal();
 
     void loadTXT_signal(QString ,bool);   //第二种加载配置文件
+
+    /*********读取积分次数相关的****************/
+    void sendUsbToRead_inteTime_signal(int, bool);
+
 
 private:
     QThread *dealMsg_thread;           //数据处理线程
@@ -182,13 +191,14 @@ private:
     /**********USB 连接信息相关****************/
     bool isLinkSuccess;
 
-
     /*********保存rowData信息槽函数*************/
     rawDataUI_Dialog rawData_dia;
 
-
     /***********MA算法相关******************/
     Hist_MA_Dialog histMA_dia;
+
+    /************  读取积分次数相关****************/
+    quint8 inteTime[2];
 
 
     aboutDialog about_dia;

@@ -72,6 +72,12 @@ void calMeanStdThread::updateSlot()
             tofStd_string.append(QString::number(tofStd));
             peakMean_string.append(QString::number(peakMean));
             peakStd_string.append(QString::number(peakStd));
+        }else
+        {
+            tofMean_string.append(QString::number(-10));
+            tofStd_string.append(QString::number(-10));
+            peakMean_string.append(QString::number(-10));
+            peakStd_string.append(QString::number(-10));
         }
     }
 
