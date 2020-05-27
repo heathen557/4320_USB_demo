@@ -240,12 +240,28 @@
           <item>
            <widget class="QLabel" name="label_18">
             <property name="text">
-             <string>起始行：</string>
+             <string>显示</string>
             </property>
            </widget>
           </item>
           <item>
-           <widget class="QComboBox" name="startLineNum_comboBox"/>
+           <widget class="QComboBox" name="showMeanLine_comboBox">
+            <item>
+             <property name="text">
+              <string>ALL</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>mean_2</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>mean_3</string>
+             </property>
+            </item>
+           </widget>
           </item>
           <item>
            <widget class="QLabel" name="label">
@@ -423,15 +439,15 @@
         </size>
        </property>
        <property name="currentIndex">
-        <number>2</number>
+        <number>1</number>
        </property>
        <widget class="QWidget" name="page">
         <property name="geometry">
          <rect>
           <x>0</x>
           <y>0</y>
-          <width>286</width>
-          <height>353</height>
+          <width>300</width>
+          <height>459</height>
          </rect>
         </property>
         <attribute name="label">
@@ -684,7 +700,7 @@
           <x>0</x>
           <y>0</y>
           <width>300</width>
-          <height>342</height>
+          <height>459</height>
          </rect>
         </property>
         <attribute name="label">
@@ -783,7 +799,7 @@
            <x>40</x>
            <y>170</y>
            <width>220</width>
-           <height>211</height>
+           <height>241</height>
           </rect>
          </property>
          <property name="title">
@@ -851,7 +867,7 @@
           <property name="geometry">
            <rect>
             <x>12</x>
-            <y>157</y>
+            <y>193</y>
             <width>96</width>
             <height>16</height>
            </rect>
@@ -864,7 +880,7 @@
           <property name="geometry">
            <rect>
             <x>114</x>
-            <y>157</y>
+            <y>190</y>
             <width>37</width>
             <height>18</height>
            </rect>
@@ -877,7 +893,7 @@
           <property name="geometry">
            <rect>
             <x>164</x>
-            <y>157</y>
+            <y>190</y>
             <width>37</width>
             <height>18</height>
            </rect>
@@ -918,6 +934,35 @@
            <set>Qt::AlignCenter</set>
           </property>
          </widget>
+         <widget class="QLineEdit" name="lineThreshold_lineEdit">
+          <property name="geometry">
+           <rect>
+            <x>120</x>
+            <y>160</y>
+            <width>91</width>
+            <height>20</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>100</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignCenter</set>
+          </property>
+         </widget>
+         <widget class="QLabel" name="label_19">
+          <property name="geometry">
+           <rect>
+            <x>20</x>
+            <y>160</y>
+            <width>81</width>
+            <height>20</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>行间平均阈值：</string>
+          </property>
+         </widget>
         </widget>
        </widget>
        <widget class="QWidget" name="page_3">
@@ -926,7 +971,7 @@
           <x>0</x>
           <y>0</y>
           <width>300</width>
-          <height>342</height>
+          <height>459</height>
          </rect>
         </property>
         <attribute name="label">

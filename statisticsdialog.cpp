@@ -407,14 +407,136 @@ void statisticsDialog::statistic_MeanStdSlot(QStringList tofMeanlist, QStringLis
         emit sendPeakStd_signal(peakStdlist);
     }
 
+//    QString str;
+
+//    float tof_mean[2][4];
+//    float tof_std[2][4];
+//    float peak_mean[2][4];
+//    float peak_std[2][4];
+
+//    int index = 31*256 + 126;
+//    int index_1 = 32*256 + 126;
+//    for(int i=0;i<4;i++)
+//    {
+//        tof_mean[0][i] = tofMeanlist[index+i].toFloat();
+//        tof_std[0][i] = tofStdlist[index+i].toFloat();
+//        peak_mean[0][i] = peakMeanlist[index+i].toFloat();
+//        peak_std[0][i] = peakStdlist[index+i].toFloat();
+
+//        tof_mean[1][i] = tofMeanlist[index_1+i].toFloat();
+//        tof_std[1][i] = tofStdlist[index_1+i].toFloat();
+//        peak_mean[1][i] = peakMeanlist[index_1+i].toFloat();
+//        peak_std[1][i] = peakStdlist[index_1+i].toFloat();
+
+//    }
+
+//    QString tofMeanStr[2];
+//    QString tofStdStr[2];
+//    QString peakMeanStr[2];
+//    QString peakStdStr[2];
+
+
+//    tofMeanStr[0] = "<font size=\"5\""+QString::number(tof_mean[0][0],'f',2)+"   "+QString::number(tof_mean[0][1],'f',2)+"   "+QString::number(tof_mean[0][2],'f',2)+"   "+QString::number(tof_mean[0][3],'f',2)+"</font>" ;
+//    tofMeanStr[1] = "<font size=\"5\""+QString::number(tof_mean[1][0],'f',2)+"   "+QString::number(tof_mean[1][1],'f',2)+"   "+QString::number(tof_mean[1][2],'f',2)+"   "+QString::number(tof_mean[1][3],'f',2)+"</font>" ;
+
+//    tofStdStr[0] =  "<font size=\"5\""+QString::number(tof_std[0][0],'f',2)+"   "+QString::number(tof_std[0][1],'f',2)+"   "+QString::number(tof_std[0][2],'f',2)+"   "+QString::number(tof_std[0][3],'f',2)+"</font>" ;
+//    tofStdStr[1] =  "<font size=\"5\""+QString::number(tof_std[1][0],'f',2)+"   "+QString::number(tof_std[1][1],'f',2)+"   "+QString::number(tof_std[1][2],'f',2)+"   "+QString::number(tof_std[1][3],'f',2)+"</font>" ;
+
+//    peakMeanStr[0]= "<font size=\"5\""+QString::number(peak_mean[0][0],'f',2)+"   "+QString::number(peak_mean[0][1],'f',2)+"   "+QString::number(peak_mean[0][2],'f',2)+"   "+QString::number(peak_mean[0][3],'f',2)+"</font>" ;
+//    peakMeanStr[1]= "<font size=\"5\""+QString::number(peak_mean[1][0],'f',2)+"   "+QString::number(peak_mean[1][1],'f',2)+"   "+QString::number(peak_mean[1][2],'f',2)+"   "+QString::number(peak_mean[1][3],'f',2)+"</font>" ;
+
+//    peakStdStr[0]= "<font size=\"5\""+QString::number(peak_std[0][0],'f',2)+"   "+QString::number(peak_std[0][1],'f',2)+"   "+QString::number(peak_std[0][2],'f',2)+"   "+QString::number(peak_std[0][3],'f',2)+"</font>" ;
+//    peakStdStr[1]= "<font size=\"5\""+QString::number(peak_std[1][0],'f',2)+"   "+QString::number(peak_std[1][1],'f',2)+"   "+QString::number(peak_std[1][2],'f',2)+"   "+QString::number(peak_std[1][3],'f',2)+"</font>" ;
+
+
+////    ui->tof_std_plainTextEdit->clear();
+//    ui->tof_std_plainTextEdit->appendHtml(tofMeanStr[0]);
+//    ui->tof_std_plainTextEdit->appendHtml(tofMeanStr[1]);
+//    ui->tof_std_plainTextEdit->appendHtml("\n\n");
+//    ui->tof_std_plainTextEdit->appendHtml(tofStdStr[0]);
+//    ui->tof_std_plainTextEdit->appendHtml(tofStdStr[1]);
+////    ui->peak_std_plainTextEdit->clear();
+//    ui->peak_std_plainTextEdit->appendHtml(peakMeanStr[0]);
+//    ui->peak_std_plainTextEdit->appendHtml(peakMeanStr[1]);
+//    ui->peak_std_plainTextEdit->appendHtml("\n\n");
+//    ui->peak_std_plainTextEdit->appendHtml(peakStdStr[0]);
+//    ui->peak_std_plainTextEdit->appendHtml(peakStdStr[1]);
+
+
+    int index = 31*256 + 126;
+
+    float tof_mean_1_1 = tofMeanlist[index].toFloat();
+    float tof_mean_1_2 = tofMeanlist[index+1].toFloat();
+    float tof_mean_1_3 = tofMeanlist[index+2].toFloat();
+    float tof_mean_1_4 = tofMeanlist[index+3].toFloat();
+
+    float tof_std_1_1 = tofStdlist[index].toFloat();
+    float tof_std_1_2 = tofStdlist[index+1].toFloat();
+    float tof_std_1_3 = tofStdlist[index+2].toFloat();
+    float tof_std_1_4 = tofStdlist[index+3].toFloat();
+
+    float peak_mean_1_1 = peakMeanlist[index].toFloat();
+    float peak_mean_1_2 = peakMeanlist[index+1].toFloat();
+    float peak_mean_1_3 = peakMeanlist[index+2].toFloat();
+    float peak_mean_1_4 = peakMeanlist[index+3].toFloat();
+
+    float peak_std_1_1 = peakStdlist[index].toFloat();
+    float peak_std_1_2 = peakStdlist[index+1].toFloat();
+    float peak_std_1_3 = peakStdlist[index+2].toFloat();
+    float peak_std_1_4 = peakStdlist[index+3].toFloat();
+
+    index = 32*256 + 126;
+
+    float tof_mean_2_1 = tofMeanlist[index].toFloat();
+    float tof_mean_2_2 = tofMeanlist[index+1].toFloat();
+    float tof_mean_2_3 = tofMeanlist[index+2].toFloat();
+    float tof_mean_2_4 = tofMeanlist[index+3].toFloat();
+
+    float tof_std_2_1 = tofStdlist[index].toFloat();
+    float tof_std_2_2 = tofStdlist[index+1].toFloat();
+    float tof_std_2_3 = tofStdlist[index+2].toFloat();
+    float tof_std_2_4 = tofStdlist[index+3].toFloat();
+
+    float peak_mean_2_1 = peakMeanlist[index].toFloat();
+    float peak_mean_2_2 = peakMeanlist[index+1].toFloat();
+    float peak_mean_2_3 = peakMeanlist[index+2].toFloat();
+    float peak_mean_2_4 = peakMeanlist[index+3].toFloat();
+
+    float peak_std_2_1 = peakStdlist[index].toFloat();
+    float peak_std_2_2 = peakStdlist[index+1].toFloat();
+    float peak_std_2_3 = peakStdlist[index+2].toFloat();
+    float peak_std_2_4 = peakStdlist[index+3].toFloat();
+
+
+    QString tofMeanStr = "<font size=\"5\" color=blue> "+QString::number(tof_mean_1_1,'f',2) +"   "+QString::number(tof_mean_1_2,'f',2)+"   " + QString::number(tof_mean_1_3,'f',2)+"   "+QString::number(tof_mean_1_4,'f',2)+"</font>" ;
+    QString tofMeanStr_2 ="<font size=\"5\" color=blue> "+ QString::number(tof_mean_2_1,'f',2) +"   "+QString::number(tof_mean_2_2,'f',2)+"   " + QString::number(tof_mean_2_3,'f',2)+"   "+QString::number(tof_mean_2_4,'f',2)+ "</font> " ;
+
+    QString tofStdStr = "<font size=\"5\" color=red> "+QString::number(tof_std_1_1,'f',2) +"   "+QString::number(tof_std_1_2,'f',2)+"   " + QString::number(tof_std_1_3,'f',2)+"   "+QString::number(tof_std_1_4,'f',2)+"</font>" ;
+    QString tofStdStr_2 ="<font size=\"5\" color=red> "+ QString::number(tof_std_2_1,'f',2) +"   "+QString::number(tof_std_2_2,'f',2)+"   " + QString::number(tof_std_2_3,'f',2)+"   "+QString::number(tof_std_2_4,'f',2)+ "</font> " ;
+
+    QString peakMeanStr = "<font size=\"5\" color=blue> "+QString::number(peak_mean_1_1,'f',2)+"   "+QString::number(peak_mean_1_2,'f',2)+"   "+QString::number(peak_mean_1_3,'f',2)+"   "+QString::number(peak_mean_1_4,'f',2)+"</font>" ;
+    QString peakmeanStr_2 = "<font size=\"5\" color=blue> "+QString::number(peak_mean_2_1,'f',2)+"   "+QString::number(peak_mean_2_2,'f',2)+"   "+QString::number(peak_mean_2_3,'f',2)+"   "+QString::number(peak_mean_2_4,'f',2)+"</font>" ;
+
+    QString peakStdStr = "<font size=\"5\" color=red> "+QString::number(peak_std_1_1,'f',2)+"   "+QString::number(peak_std_1_2,'f',2)+"   "+QString::number(peak_std_1_3,'f',2)+"   "+QString::number(peak_std_1_4,'f',2)+"</font>" ;
+    QString peakStdStr_2 = "<font size=\"5\" color=red> "+QString::number(peak_std_2_1,'f',2)+"   "+QString::number(peak_std_2_2,'f',2)+"   "+QString::number(peak_std_2_3,'f',2)+"   "+QString::number(peak_std_2_4,'f',2)+"</font>" ;
 
 
 
-//    ui->tofMean_textEdit->setText(tofMean);
-//    ui->tofStd_textEdit->setText(tofStd);
+    ui->tof_std_plainTextEdit->clear();
+    ui->tof_std_plainTextEdit->appendHtml(tofMeanStr);
+    ui->tof_std_plainTextEdit->appendHtml(tofMeanStr_2);
+    ui->tof_std_plainTextEdit->appendHtml("\n\n");
+    ui->tof_std_plainTextEdit->appendHtml(tofStdStr);
+    ui->tof_std_plainTextEdit->appendHtml(tofStdStr_2);
 
-//    ui->peakMean_textEdit->setText(peakMean);
-//    ui->peakStd_textEdit->setText(peakStd);
+    ui->peak_std_plainTextEdit->clear();
+    ui->peak_std_plainTextEdit->appendHtml(peakMeanStr);
+    ui->peak_std_plainTextEdit->appendHtml(peakmeanStr_2);
+     ui->peak_std_plainTextEdit->appendHtml("\n\n");
+    ui->peak_std_plainTextEdit->appendHtml(peakStdStr);
+    ui->peak_std_plainTextEdit->appendHtml(peakStdStr_2);
+
+
 }
 
 
@@ -422,7 +544,7 @@ void statisticsDialog::closeEvent(QCloseEvent *event)
 {
     qDebug()<<" QCloseEvent "<<endl;
     isRun = false;
-     startStop_signal(0);
+    startStop_signal(0);
 
 
      emit sendTofMeanclear_signal();

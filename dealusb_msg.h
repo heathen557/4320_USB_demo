@@ -52,7 +52,7 @@ public:
     float xf_position[256];   //x方向的spad偏移
     float yf_position[64];   //y方向的spad偏移
     /******** 利用peak值进行滤波的相关变量****************/
-    int peakOffset;                     //设置为阈值，小于这个值的认为是无效数据，将tof值设置为0,程序设置的此值的默认值为0
+    float peakOffset;                     //设置为阈值，小于这个值的认为是无效数据，将tof值设置为0,程序设置的此值的默认值为0
     float lastTOF[100][16384];         //存储上一帧的TOF值，然后此值和当前值做平均得出 现在的TOF值   ，取平均值的时候用  ,暂时取五帧
     int haveIndex;
     bool isMeanFlag;
@@ -139,6 +139,18 @@ public:
     int histogram_maxValue;
 
 
+    int tmpIndex;    //线阵第一次数据会有问题
+
+
+    /*******线阵取平均相关********/
+    float lineMean_tof[256][64];
+    float lineMean_peak[256][64];
+    float lineMean_srcIntensity[256][64];
+
+    int showLineMeanInt;   //默认为0
+    int mean_offset;       //默认为20
+
+
 signals:
     void staticValueSignal(float,float,float,float,float,float,float,float,float,float);
     void savePCDSignal(pcl::PointCloud<pcl::PointXYZRGB>,int);    // int 0:二进制  1：ASCII
@@ -194,6 +206,17 @@ public slots:
     /****************** RawData MA 相关 **********************************/
     void start_RowDatahistogram_slot(int exposureNum, int IntegrationNum,int row,int col,bool flag);   //行、列、 开启关闭标识
     void receRawData_MA_slot(QByteArray);
+
+
+    /******两行合并成一行数据*************/
+    /*******显示18行、 两行取平均、三行取平均 的信号******************/
+    void sendShowMeanLine_slot(int index);
+
+    void toShowAll18Line_slot();       //显示全部的18行数据
+
+    void toShowOneLine_2_1_slot();     //两行合并成一行数据*
+
+    void toShowOneLine_3_1_slot();     //三行合并成一行数据
 
 
 

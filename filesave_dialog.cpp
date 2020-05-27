@@ -9,6 +9,24 @@ fileSave_Dialog::fileSave_Dialog(QWidget *parent) :
     ui->lineEdit->setReadOnly(true);
 
     ui->RawTof_checkBox->setEnabled(false);
+    ui->cancel_save_pushButton->setVisible(false);
+
+
+
+
+
+    ui->pileUpTof_checkBox->setEnabled(false);
+    ui->filterTof_checkBox->setEnabled(false);
+    ui->filterPeak_checkBox->setEnabled(false);
+
+    ui->pileUpTof_checkBox->setVisible(false);
+    ui->filterTof_checkBox->setVisible(false);
+    ui->filterPeak_checkBox->setVisible(false);
+
+
+    ui->X_checkBox->isChecked();
+    ui->Y_checkBox->isChecked();
+    ui->Z_checkBox->isChecked();
 
 //    disable_checkBoxUI();
 }
@@ -58,25 +76,38 @@ void fileSave_Dialog::on_SelFilePath_pushButton_clicked()
 //!开始保存槽函数
 void fileSave_Dialog::on_start_saveFile_pushButton_clicked()
 {
-    bool isRawTof = ui->RawTof_checkBox->isChecked();
-    bool isPileUpTof = ui->pileUpTof_checkBox->isChecked();
-    bool isFilterTof = ui->filterTof_checkBox->isChecked();
-    bool isRawPeak = ui->RawPeak_checkBox->isChecked();
-    bool isFilterPeak = ui->filterPeak_checkBox->isChecked();
-    bool isX = ui->X_checkBox->isChecked();
-    bool isY = ui->Y_checkBox->isChecked();
-    bool isZ = ui->Z_checkBox->isChecked();
-
-
-    if(!file_path.isEmpty())
+    if(ui->start_saveFile_pushButton->text() == QStringLiteral("开始保存"))
     {
-        ui->SavedFrame_label->setText("0");
-        emit alter_fileSave_signal(isRawTof,isPileUpTof,isFilterTof,isRawPeak,isFilterPeak,isX,isY,isZ);
-        emit isSaveFlagSignal(true,file_path,0);
+        bool isRawTof = ui->RawTof_checkBox->isChecked();
+        bool isPileUpTof = ui->pileUpTof_checkBox->isChecked();
+        bool isFilterTof = ui->filterTof_checkBox->isChecked();
+        bool isRawPeak = ui->RawPeak_checkBox->isChecked();
+        bool isFilterPeak = ui->filterPeak_checkBox->isChecked();
+        bool isX = ui->X_checkBox->isChecked();
+        bool isY = ui->Y_checkBox->isChecked();
+        bool isZ = ui->Z_checkBox->isChecked();
+
+
+        if(!file_path.isEmpty())
+        {
+            ui->SavedFrame_label->setText("0");
+            emit alter_fileSave_signal(isRawTof,isPileUpTof,isFilterTof,isRawPeak,isFilterPeak,isX,isY,isZ);
+            emit isSaveFlagSignal(true,file_path,0);
+        }else
+        {
+            QMessageBox::information(NULL,QStringLiteral("告警"),QStringLiteral("保存路径不能为空"));
+        }
+
+        ui->start_saveFile_pushButton->setText(QStringLiteral("取消保存"));
+
     }else
     {
-        QMessageBox::information(NULL,QStringLiteral("告警"),QStringLiteral("保存路径不能为空"));
+         emit isSaveFlagSignal(false,file_path,0);
+        ui->start_saveFile_pushButton->setText(QStringLiteral("开始保存"));
     }
+
+
+
 
 
 }

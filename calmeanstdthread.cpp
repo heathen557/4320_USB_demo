@@ -84,7 +84,7 @@ void calMeanStdThread::updateSlot()
 
     emit statistic_MeanStdSignal(tofMean_string,tofStd_string,peakMean_string,peakStd_string);
 
-    qDebug()<<QStringLiteral("统计信息信号已经发出")<<endl;
+//    qDebug()<<QStringLiteral("统计信息信号已经发出")<<endl;
 
 
 }

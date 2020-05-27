@@ -139,6 +139,12 @@ private slots:
     void beginRead_inteTime();
     void returnSendUsbToRead_inteTime_slot(int,QString);
 
+
+
+    void on_showMeanLine_comboBox_currentIndexChanged(int index);
+
+    void on_lineThreshold_lineEdit_returnPressed();
+
 signals:
     void change_gain_signal(float);
     void change_tof_peak_signal();
@@ -157,6 +163,9 @@ signals:
 
     /*********读取积分次数相关的****************/
     void sendUsbToRead_inteTime_signal(int, bool);
+
+    /*******显示18行、 两行取平均、三行取平均 的信号******************/
+    void sendShowMeanLine_signal(int index);
 
 
 private:

@@ -38,16 +38,22 @@ DealUsb_msg::DealUsb_msg(QObject *parent) : QObject(parent),
     //    pointCloudRgb.width = 16384;
     //    pointCloudRgb.height = 1;
     //    pointCloudRgb.resize(pointCloudRgb.width);
+    tmpIndex = 0;         //线阵第一次数据会有问题
+    showLineMeanInt = 0;  //默认显示全部的18行
+    mean_offset = 100;
 
     isKalman =true;
-    exposure_num = 20;  //初始化20次曝光
+    exposure_num = 20;   //初始化20次曝光
     rawData_saveFrameNums = 200;
 
     tempRgbCloud.width = 16384;
     tempRgbCloud.height = 1 ;
     tempRgbCloud.points.resize(tempRgbCloud.width);
 
-    LSB = 0.031; //时钟频率
+//    LSB = 0.031;
+//    LSB = 0.0075;     //alter at 05-20
+    LSB = 15.55;
+
     isFilterFlag = false ;    //初始化时不进行滤波
     lineSelect = false;       //初始化 不切换两行像素
     isTOF = true;
@@ -64,7 +70,7 @@ DealUsb_msg::DealUsb_msg(QObject *parent) : QObject(parent),
     is_pileUp_flag = true;
     isAutoCalibration_flag = false;  //默认不适用
     ishave_Four = 0 ;               // 初始设置为0，逐渐+1 ==4 时进行判断
-    calibration_mean_num = 20;    //默认100帧取平均
+    calibration_mean_num = 200;    //默认100帧取平均
 
     //3D坐标转换
     camera_dis = 23;             //单位mm
@@ -238,6 +244,7 @@ void DealUsb_msg::loadLocalArray()
 
 
 
+
     //加载xf_position.txt配置集
     QFile xf_position_file("xf_position.txt");
     QString xf_position_line[300];
@@ -299,6 +306,7 @@ void DealUsb_msg::loadLocalArray()
     {
         tofOffsetArray[i] = tofOffsetArray_line[i].toFloat();
     }
+
 
     for(int i=0; i<256; i++)
     {
@@ -372,14 +380,6 @@ void DealUsb_msg::loadLocalArray()
         log_str = "[load conf file error]:pileUp_file.txt";
         emit Display_log_signal(log_str);
     }
-
-
-
-
-
-
-
-
 
 }
 
@@ -624,6 +624,460 @@ void DealUsb_msg::tof_filter()
 
 
 
+
+
+//!
+//! \brief DealUsb_msg::toShowAll18Line_slot
+//! 显示全部的18行数据  12-20  对应于像素 24 - 41 一共18行数据
+void  DealUsb_msg::toShowAll18Line_slot()
+{
+    int cloudIndex = 0;
+//    int mean_offset = 100;     //两帧之间大于某个值时 ，就不做平均
+    float resTof = 0;
+    float resPeak = 0;
+    float savePeak = 0;
+    int showLine_index = 24;   //两行取平均的话，显示64/2=32行  起始行为16
+    for(int i=0; i<64; i++)
+    {
+        for(int j=0;j<256; j++)
+        {
+
+            if(lineMean_tof[j][i]>0)
+            {
+                // 1 根据阈值来判断是否需要做平均
+                resTof = lineMean_tof[j][i];
+                resPeak = lineMean_peak[j][i];
+                savePeak = lineMean_srcIntensity[j][i];
+
+
+
+               // 2 赋值到二维图像
+               //设置TOF图像、强度图像的颜色
+               QRgb tofColor,intenColor;
+               int gainIndex_tof = resTof*gainImage_tof;
+               int gainIndex_intensity =resPeak * gainImage_peak;
+               if(gainIndex_tof<1024 && gainIndex_tof>=0)
+                   tofColor = qRgb(colormap[gainIndex_tof * 3], colormap[gainIndex_tof * 3 + 1], colormap[gainIndex_tof * 3 + 2]);
+               else
+                   tofColor = qRgb(colormap[1023 * 3], colormap[1023 * 3 + 1], colormap[1023 * 3 + 2]);
+
+               if(gainIndex_intensity<1024 && gainIndex_intensity>=0)
+                   intenColor = qRgb(colormap[gainIndex_intensity * 3], colormap[gainIndex_intensity * 3 + 1], colormap[gainIndex_intensity * 3 + 2]);
+               else
+                   intenColor = qRgb(colormap[1023 * 3], colormap[1023 * 3 + 1], colormap[1023 * 3 + 2]);
+
+               microQimage.setPixel(j,i,tofColor);         //TOF图像的赋值
+               macroQimage.setPixel(j,i,intenColor);       //强度图像的赋值
+
+
+               // 3 获取 点云数据的标号
+               cloudIndex = i*256 + j;   //两行中始终选取下面的一行
+//               qDebug()<<"cloudIndex = "<<cloudIndex;
+
+
+               // 4 同步到三维点云图像当中
+               /************点云数据相关************/
+               temp_y = calibration_y(resTof,j,i+1);         //tof转换depth公式
+               temp_x = calibration_x(temp_y,j,i+1);
+               temp_z = calibration_z(temp_y,j,i+1);
+                                                             /**************点云校正**********/
+               temp_y = temp_y + tofOffsetArray[cloudIndex];
+               temp_x = temp_x + calibration_x(tofOffsetArray[cloudIndex],j,i+1);
+               temp_z = temp_z + calibration_z(tofOffsetArray[cloudIndex],j,i+1);
+
+               if(temp_y<=0)
+               {
+                   temp_x=0;
+                   temp_y=0;
+                   temp_z=0;
+               }
+
+               if(resPeak <peakOffset)
+               {
+                   temp_x = 0;
+                   temp_z = 0;
+                   temp_y = 0;
+               }
+
+               mouseShowMutex.lock();
+               mouseShowTOF[j][i] = resTof;
+               mouseShowPEAK[j][i] = savePeak;
+               mouseShowDepth[j][i] = temp_y;
+               mouseShowMutex.unlock();
+
+
+               QColor mColor = QColor(tofColor);
+               r = mColor.red();
+               g = mColor.green();
+               b = mColor.blue();
+               rgb = ((int)r << 16 | (int)g << 8 | (int)b);
+
+               tempRgbCloud.points[cloudIndex].x = temp_x;
+               tempRgbCloud.points[cloudIndex].y = temp_y;
+               tempRgbCloud.points[cloudIndex].z = temp_z;
+               tempRgbCloud.points[cloudIndex].rgb = *reinterpret_cast<float*>(&rgb);
+
+
+               if(isSaveFlag == true)
+               {
+                   if(isSaveRawTof)
+                   {
+                       tofPeakNum[cloudIndex+1] = QString::number(resTof)+" ";
+                   }
+                   if(isSaveRawPeak)
+                   {
+                       tofPeakNum[cloudIndex+1].append(QString::number(savePeak)+" ");
+                   }
+
+                   if(isSaveX)
+                   {
+                       tofPeakNum[cloudIndex+1].append(QString::number(temp_x) + " ");
+                   }
+                   if(isSaveY)
+                   {
+                       tofPeakNum[cloudIndex+1].append(QString::number(temp_y) + " ");
+                   }
+                   if(isSaveZ)
+                   {
+                       tofPeakNum[cloudIndex+1].append(QString::number(temp_z));
+                   }
+                   tofPeakNum[cloudIndex+1].append("\n");
+
+               }
+
+            }
+        }
+
+        showLine_index++;
+    }
+}
+
+
+
+/******两行合并成一行数据*************/
+void DealUsb_msg::toShowOneLine_2_1_slot()
+{
+
+    int cloudIndex = 0;
+//    int mean_offset = 20;     //两帧之间大于某个值时 ，就不做平均
+    float resTof = 0;
+    float resPeak = 0;
+    float savePeak = 0;
+    int showLine_index = 16;   //两行取平均的话，显示64/2=32行  起始行为16
+    for(int i=0; i<63; i+=2)
+    {
+        for(int j=0;j<256; j++)
+        {
+
+            if(lineMean_tof[j][i]>0)
+            {
+                // 1 根据阈值来判断是否需要做平均
+               if(abs(lineMean_tof[j][i] - lineMean_tof[j][i+1])>mean_offset)
+               {
+                   resTof = lineMean_tof[j][i+1];
+                   resPeak = lineMean_peak[j][i+1];
+                   savePeak = lineMean_srcIntensity[j][i+1];
+               }else
+               {
+                   resTof = (lineMean_tof[j][i] + lineMean_tof[j][i+1])/2.0;
+                   resPeak = (lineMean_peak[j][i] + lineMean_peak[j][i+1])/2.0;
+                   savePeak = (lineMean_srcIntensity[j][i] + lineMean_srcIntensity[j][i+1])/2.0;
+               }
+
+
+
+               // 2 赋值到二维图像
+               //设置TOF图像、强度图像的颜色
+               QRgb tofColor,intenColor;
+               int gainIndex_tof = resTof*gainImage_tof;
+               int gainIndex_intensity =resPeak * gainImage_peak;
+               if(gainIndex_tof<1024 && gainIndex_tof>=0)
+                   tofColor = qRgb(colormap[gainIndex_tof * 3], colormap[gainIndex_tof * 3 + 1], colormap[gainIndex_tof * 3 + 2]);
+               else
+                   tofColor = qRgb(colormap[1023 * 3], colormap[1023 * 3 + 1], colormap[1023 * 3 + 2]);
+
+               if(gainIndex_intensity<1024 && gainIndex_intensity>=0)
+                   intenColor = qRgb(colormap[gainIndex_intensity * 3], colormap[gainIndex_intensity * 3 + 1], colormap[gainIndex_intensity * 3 + 2]);
+               else
+                   intenColor = qRgb(colormap[1023 * 3], colormap[1023 * 3 + 1], colormap[1023 * 3 + 2]);
+
+               microQimage.setPixel(j,showLine_index,tofColor);         //TOF图像的赋值
+               macroQimage.setPixel(j,showLine_index,intenColor);       //强度图像的赋值
+
+
+               // 3 获取 点云数据的标号
+               cloudIndex = (i+1)*256 + j;   //两行中始终选取下面的一行
+//               qDebug()<<"cloudIndex = "<<cloudIndex;
+
+
+               // 4 同步到三维点云图像当中
+               /************点云数据相关************/
+               temp_y = calibration_y(resTof,j,i+1);         //tof转换depth公式
+               temp_x = calibration_x(temp_y,j,i+1);
+               temp_z = calibration_z(temp_y,j,i+1);
+                                                             /**************点云校正**********/
+               temp_y = temp_y + tofOffsetArray[cloudIndex];
+               temp_x = temp_x + calibration_x(tofOffsetArray[cloudIndex],j,i+1);
+               temp_z = temp_z + calibration_z(tofOffsetArray[cloudIndex],j,i+1);
+
+               if(temp_y<=0)
+               {
+                   temp_x=0;
+                   temp_y=0;
+                   temp_z=0;
+               }
+
+               if(resPeak <peakOffset)
+               {
+                   temp_x = 0;
+                   temp_z = 0;
+                   temp_y = 0;
+               }
+
+
+               mouseShowMutex.lock();
+               mouseShowTOF[j][showLine_index] = resTof;
+               mouseShowPEAK[j][showLine_index] = savePeak;
+               mouseShowDepth[j][showLine_index] = temp_y;
+               mouseShowMutex.unlock();
+
+               QColor mColor = QColor(tofColor);
+               r = mColor.red();
+               g = mColor.green();
+               b = mColor.blue();
+               rgb = ((int)r << 16 | (int)g << 8 | (int)b);
+
+               tempRgbCloud.points[cloudIndex].x = temp_x;
+               tempRgbCloud.points[cloudIndex].y = temp_y;
+               tempRgbCloud.points[cloudIndex].z = temp_z;
+               tempRgbCloud.points[cloudIndex].rgb = *reinterpret_cast<float*>(&rgb);
+
+
+               if(isSaveFlag == true)
+               {
+                   if(isSaveRawTof)
+                   {
+                       tofPeakNum[cloudIndex+1] = QString::number(resTof)+" ";
+                   }
+                   if(isSaveRawPeak)
+                   {
+                       tofPeakNum[cloudIndex+1].append(QString::number(savePeak)+" ");
+                   }
+
+                   if(isSaveX)
+                   {
+                       tofPeakNum[cloudIndex+1].append(QString::number(temp_x) + " ");
+                   }
+                   if(isSaveY)
+                   {
+                       tofPeakNum[cloudIndex+1].append(QString::number(temp_y) + " ");
+                   }
+                   if(isSaveZ)
+                   {
+                       tofPeakNum[cloudIndex+1].append(QString::number(temp_z));
+                   }
+                   tofPeakNum[cloudIndex+1].append("\n");
+
+               }
+
+
+
+            }
+        }
+
+        showLine_index++;
+    }
+}
+
+
+
+//三行数据合并成一行
+void DealUsb_msg::toShowOneLine_3_1_slot()     //三行合并成一行数据
+{
+    int cloudIndex = 0;
+//    int mean_offset = 20;     //两帧之间大于某个值时 ，就不做平均
+    float resTof = 0;
+    float resPeak = 0;
+    float savePeak = 0;
+    int showLine_index = 22;   //三行取平均的话，显示64/3=32行  起始行为22
+
+    for(int i=0; i<62; i+=3)
+    {
+        for(int j=0;j<256; j++)
+        {
+
+            if(lineMean_tof[j][i]>0)
+            {
+                // 1 根据阈值来判断是否需要做平均
+               if((abs(lineMean_tof[j][i] - lineMean_tof[j][i+1])>mean_offset) || (abs(lineMean_tof[j][i] - lineMean_tof[j][i+2])>mean_offset) || (abs(lineMean_tof[j][i+1] - lineMean_tof[j][i+2])>mean_offset))
+               {
+                   resTof = lineMean_tof[j][i+2];
+                   resPeak = lineMean_peak[j][i+2];
+                   savePeak = lineMean_srcIntensity[j][i+2];
+               }else
+               {
+                   resTof = (lineMean_tof[j][i] + lineMean_tof[j][i+1] + lineMean_tof[j][i+2])/3.0;
+                   resPeak = (lineMean_peak[j][i] + lineMean_peak[j][i+1] + lineMean_tof[j][i+2])/3.0;
+                   savePeak = (lineMean_srcIntensity[j][i]+lineMean_srcIntensity[j][i+1]+lineMean_srcIntensity[j][i+2])/3.0;
+               }
+
+
+
+               // 2 赋值到二维图像
+               //设置TOF图像、强度图像的颜色
+               QRgb tofColor,intenColor;
+               int gainIndex_tof = resTof*gainImage_tof;
+               int gainIndex_intensity =resPeak * gainImage_peak;
+               if(gainIndex_tof<1024 && gainIndex_tof>=0)
+                   tofColor = qRgb(colormap[gainIndex_tof * 3], colormap[gainIndex_tof * 3 + 1], colormap[gainIndex_tof * 3 + 2]);
+               else
+                   tofColor = qRgb(colormap[1023 * 3], colormap[1023 * 3 + 1], colormap[1023 * 3 + 2]);
+
+               if(gainIndex_intensity<1024 && gainIndex_intensity>=0)
+                   intenColor = qRgb(colormap[gainIndex_intensity * 3], colormap[gainIndex_intensity * 3 + 1], colormap[gainIndex_intensity * 3 + 2]);
+               else
+                   intenColor = qRgb(colormap[1023 * 3], colormap[1023 * 3 + 1], colormap[1023 * 3 + 2]);
+
+               microQimage.setPixel(j,showLine_index,tofColor);         //TOF图像的赋值
+               macroQimage.setPixel(j,showLine_index,intenColor);       //强度图像的赋值
+
+
+               // 3 获取 点云数据的标号
+               cloudIndex = (i+2)*256 + j;   //两行中始终选取下面的一行
+//               qDebug()<<"cloudIndex = "<<cloudIndex;
+
+               // 4 同步到三维点云图像当中
+               /************点云数据相关************/
+               temp_y = calibration_y(resTof,j,i+1);         //tof转换depth公式
+               temp_x = calibration_x(temp_y,j,i+1);
+               temp_z = calibration_z(temp_y,j,i+1);
+                                                             /**************点云校正**********/
+               temp_y = temp_y + tofOffsetArray[cloudIndex];
+               temp_x = temp_x + calibration_x(tofOffsetArray[cloudIndex],j,i+1);
+               temp_z = temp_z + calibration_z(tofOffsetArray[cloudIndex],j,i+1);
+
+               if(temp_y<=0)
+               {
+                   temp_x=0;
+                   temp_y=0;
+                   temp_z=0;
+               }
+
+               if(resPeak <peakOffset)
+               {
+                   temp_x = 0;
+                   temp_z = 0;
+                   temp_y = 0;
+               }
+
+               mouseShowMutex.lock();
+               mouseShowTOF[j][showLine_index] = resTof;
+               mouseShowPEAK[j][showLine_index] = savePeak;
+               mouseShowDepth[j][showLine_index] = temp_y;
+               mouseShowMutex.unlock();
+
+
+               QColor mColor = QColor(tofColor);
+               r = mColor.red();
+               g = mColor.green();
+               b = mColor.blue();
+               rgb = ((int)r << 16 | (int)g << 8 | (int)b);
+
+               tempRgbCloud.points[cloudIndex].x = temp_x;
+               tempRgbCloud.points[cloudIndex].y = temp_y;
+               tempRgbCloud.points[cloudIndex].z = temp_z;
+               tempRgbCloud.points[cloudIndex].rgb = *reinterpret_cast<float*>(&rgb);
+
+
+               if(isSaveFlag == true)
+               {
+                   if(isSaveRawTof)
+                   {
+                       tofPeakNum[cloudIndex+1] = QString::number(resTof)+" ";
+                   }
+                   if(isSaveRawPeak)
+                   {
+                       tofPeakNum[cloudIndex+1].append(QString::number(resPeak)+" ");
+                   }
+
+                   if(isSaveX)
+                   {
+                       tofPeakNum[cloudIndex+1].append(QString::number(temp_x) + " ");
+                   }
+                   if(isSaveY)
+                   {
+                       tofPeakNum[cloudIndex+1].append(QString::number(temp_y) + " ");
+                   }
+                   if(isSaveZ)
+                   {
+                       tofPeakNum[cloudIndex+1].append(QString::number(temp_z));
+                   }
+                   tofPeakNum[cloudIndex+1].append("\n");
+
+               }
+            }
+        }
+
+        showLine_index++;
+    }
+}
+
+
+//!
+//! \brief DealUsb_msg::sendShowMeanLine_slot
+//! \param index
+//! index = 0  显示18行
+//! index = 1  显示两行取平均
+//! index = 2 显示三行取平均
+void DealUsb_msg::sendShowMeanLine_slot(int index)
+{
+    showLineMeanInt = index ;
+
+    qDebug()<<" DealUsb_msg.showLineMeanInt = "<<showLineMeanInt;
+
+    //把图像的数据清空
+    // 1 图片的初始化
+
+    mouseShowMutex.lock();
+    for(int i=0;i<256; i++)
+    {
+        for(int j=0; j<64; j++)
+        {
+            macroQimage.setPixel(i,j,0);
+            microQimage.setPixel(i,j,0);
+
+            lineMean_tof[i][j] = 0;
+            lineMean_peak[i][j] = 0;
+
+
+            mouseShowTOF[i][j] = 0;
+            mouseShowPEAK[i][j] = 0;
+            mouseShowDepth[i][j] = 0;
+
+
+//            mouseShowMutex.lock();
+//            mouseShowTOF[i][j] = 0;     //鼠标显示处 的显示为 0
+//            mouseShowPEAK[i[j] = 0;     //鼠标显示处 的显示为 0
+//            mouseShowDepth[i][j] = 0;   //鼠标显示处 的显示为 0
+//            mouseShowMutex.unlock();
+        }
+    }
+    mouseShowMutex.unlock();
+    //把 点云的数据清空
+    for(int i=0;i<16384; i++)
+    {
+        tempRgbCloud.points[i].x = 0;
+        tempRgbCloud.points[i].y = 0;
+        tempRgbCloud.points[i].z = 0;
+
+        tofPeakNum[1+i].clear();     //保存文件时 把相应的数据置为空
+    }
+
+
+
+}
+
+
 // 160x120版本的协议     一个包324个字节 2个字节的spadNum, 2个字节的lineNum
 // 从中间往上下两侧扩散
 // 中间行为 59   0-59为上半部分   60-129为下半部分
@@ -641,6 +1095,19 @@ void DealUsb_msg::tof_filter()
 //!  5、colImage = i*2 + spadNum%2
 void DealUsb_msg::recvMsgSlot(QByteArray array)
 {
+    tmpIndex++;
+
+    if(tmpIndex<10)
+    {
+        return;
+    }else
+    {
+        tmpIndex = 20;
+    }
+
+
+
+
     int ret;
     char *MyBuffer;
 
@@ -659,6 +1126,8 @@ void DealUsb_msg::recvMsgSlot(QByteArray array)
     if(spadNum < lastSpadNum)  //此时说明上一帧数据已经接收完毕，把整帧数据付给其他线程，供其显示，数据可以显示了
     {
         haveIndex++;
+
+
 
 
         //统计信息相关的 ，将统计信息的容器赋值给全局变量
@@ -684,6 +1153,23 @@ void DealUsb_msg::recvMsgSlot(QByteArray array)
         yMax = -10000;
         zMin = 10000;
         zMax = -10000;
+
+
+//        toShowOneLine_2_1_slot();    //两行直线合并
+
+//        toShowOneLine_3_1_slot();    //三行直线进行合并
+
+
+        if(0 == showLineMeanInt)
+        {
+            toShowAll18Line_slot();
+        }else if(1 == showLineMeanInt)
+        {
+            toShowOneLine_2_1_slot();
+        }else if(2 == showLineMeanInt)
+        {
+            toShowOneLine_3_1_slot();
+        }
 
 
 
@@ -858,32 +1344,39 @@ void DealUsb_msg::recvMsgSlot(QByteArray array)
 
 
 
-        //设置TOF图像、强度图像的颜色
-        //设置TOF图像、强度图像的颜色
-        QRgb tofColor,intenColor;
-        int gainIndex_tof = tof*gainImage_tof;
-        gainIndex_tof = gainIndex_tof>0 ?gainIndex_tof:0;
-        int gainIndex_intensity =intensity * gainImage_peak;
-        //        int gainIndex_intensity = pow(intensity,2) *gainImage_peak;
-        if(gainIndex_tof<1024 && gainIndex_tof>=0)
-            tofColor = qRgb(colormap[gainIndex_tof * 3], colormap[gainIndex_tof * 3 + 1], colormap[gainIndex_tof * 3 + 2]);
-        else
-            tofColor = qRgb(colormap[1023 * 3], colormap[1023 * 3 + 1], colormap[1023 * 3 + 2]);
+//        //设置TOF图像、强度图像的颜色
+//        //设置TOF图像、强度图像的颜色
+//        QRgb tofColor,intenColor;
+//        int gainIndex_tof = tof*gainImage_tof;
+//        gainIndex_tof = gainIndex_tof>0 ?gainIndex_tof:0;
+//        int gainIndex_intensity =intensity * gainImage_peak;
+//        //        int gainIndex_intensity = pow(intensity,2) *gainImage_peak;
+//        if(gainIndex_tof<1024 && gainIndex_tof>=0)
+//            tofColor = qRgb(colormap[gainIndex_tof * 3], colormap[gainIndex_tof * 3 + 1], colormap[gainIndex_tof * 3 + 2]);
+//        else
+//            tofColor = qRgb(colormap[1023 * 3], colormap[1023 * 3 + 1], colormap[1023 * 3 + 2]);
 
-        if(gainIndex_intensity<1024 && gainIndex_intensity>=0)
-            intenColor = qRgb(colormap[gainIndex_intensity * 3], colormap[gainIndex_intensity * 3 + 1], colormap[gainIndex_intensity * 3 + 2]);
-        else
-            intenColor = qRgb(colormap[1023 * 3], colormap[1023 * 3 + 1], colormap[1023 * 3 + 2]);
+//        if(gainIndex_intensity<1024 && gainIndex_intensity>=0)
+//            intenColor = qRgb(colormap[gainIndex_intensity * 3], colormap[gainIndex_intensity * 3 + 1], colormap[gainIndex_intensity * 3 + 2]);
+//        else
+//            intenColor = qRgb(colormap[1023 * 3], colormap[1023 * 3 + 1], colormap[1023 * 3 + 2]);
 
 
         if(colImg>=0 && colImg<256 && rowImg>=0 && rowImg<64)
         {
-            microQimage.setPixel(colImg,rowImg,tofColor);         //TOF图像的赋值
-            macroQimage.setPixel(colImg,rowImg,intenColor);       //强度图像的赋值
+//            microQimage.setPixel(colImg,rowImg,tofColor);         //TOF图像的赋值
+//            macroQimage.setPixel(colImg,rowImg,intenColor);       //强度图像的赋值
 
             //tof filter 相关
             src_tof[colImg][rowImg] = tof;
             src_peak[colImg][rowImg] = intensity;
+
+
+            //线阵取平均相关
+            lineMean_tof[colImg][rowImg] = tof;
+            lineMean_peak[colImg][rowImg] = intensity;
+            lineMean_srcIntensity[colImg][rowImg] = src_intensity;
+
 
             /************点云数据相关************/
             temp_y = calibration_y(tof,colImg,rowImg);         //tof转换depth公式
@@ -895,7 +1388,7 @@ void DealUsb_msg::recvMsgSlot(QByteArray array)
             temp_x = temp_x + calibration_x(tofOffsetArray[cloudIndex],colImg,rowImg);
             temp_z = temp_z + calibration_z(tofOffsetArray[cloudIndex],colImg,rowImg);
 
-            if(temp_y<0)
+            if(temp_y<=0)
             {
                 temp_x=0;
                 temp_y=0;
@@ -903,11 +1396,11 @@ void DealUsb_msg::recvMsgSlot(QByteArray array)
             }
 
             /************鼠标点击处显示信息相关*************/
-            mouseShowMutex.lock();
-            mouseShowTOF[colImg][rowImg] = tof;
-            mouseShowPEAK[colImg][rowImg] = src_intensity;
-            mouseShowDepth[colImg][rowImg] = temp_y;
-            mouseShowMutex.unlock();
+//            mouseShowMutex.lock();
+//            mouseShowTOF[colImg][rowImg] = tof;
+//            mouseShowPEAK[colImg][rowImg] = src_intensity;
+//            mouseShowDepth[colImg][rowImg] = temp_y;
+//            mouseShowMutex.unlock();
             /*****************************************/
 
             if(intensity <peakOffset)
@@ -927,7 +1420,7 @@ void DealUsb_msg::recvMsgSlot(QByteArray array)
                 }
             }
 
-            if(true == isAutoCalibration_flag)
+            if(true == isAutoCalibration_flag && temp_y>0 )
             {
                 float mean_res_y = 0;
                 vec_mean_y[cloudIndex].push_back(temp_y);
@@ -940,54 +1433,54 @@ void DealUsb_msg::recvMsgSlot(QByteArray array)
             }
 
             /*********文件保存相关*****************/
-            if(isSaveFlag == true)
-            {
-                if(isSaveRawTof)
-                {
-                    tofPeakNum[cloudIndex+1] = QString::number(rawTof)+" ";
-                }
-                if(isSavePileUpTof)
-                {
-                    tofPeakNum[cloudIndex+1].append(QString::number(after_pileup_tof)+" ");
-                }
-                if(isSaveFilterTof)
-                {
-                    tofPeakNum[cloudIndex+1].append(QString::number(tof)+" ");     //卡尔曼滤波以后 对像素进行了平移处理
-                }
-                if(isSaveRawPeak)
-                {
-                    tofPeakNum[cloudIndex+1].append(QString::number(src_intensity)+" ");
-                }
-                if(isSaveFilterPeak)
-                {
-                    tofPeakNum[cloudIndex+1].append(QString::number(intensity) + " ");
-                }
-                if(isSaveX)
-                {
-                    tofPeakNum[cloudIndex+1].append(QString::number(temp_x) + " ");
-                }
-                if(isSaveY)
-                {
-                    tofPeakNum[cloudIndex+1].append(QString::number(temp_y) + " ");
-                }
-                if(isSaveZ)
-                {
-                    tofPeakNum[cloudIndex+1].append(QString::number(temp_z));
-                }
-                tofPeakNum[cloudIndex+1].append("\n");
+//            if(isSaveFlag == true)
+//            {
+//                if(isSaveRawTof)
+//                {
+//                    tofPeakNum[cloudIndex+1] = QString::number(rawTof)+" ";
+//                }
+//                if(isSavePileUpTof)
+//                {
+//                    tofPeakNum[cloudIndex+1].append(QString::number(after_pileup_tof)+" ");
+//                }
+//                if(isSaveFilterTof)
+//                {
+//                    tofPeakNum[cloudIndex+1].append(QString::number(tof)+" ");     //卡尔曼滤波以后 对像素进行了平移处理
+//                }
+//                if(isSaveRawPeak)
+//                {
+//                    tofPeakNum[cloudIndex+1].append(QString::number(src_intensity)+" ");
+//                }
+//                if(isSaveFilterPeak)
+//                {
+//                    tofPeakNum[cloudIndex+1].append(QString::number(intensity) + " ");
+//                }
+//                if(isSaveX)
+//                {
+//                    tofPeakNum[cloudIndex+1].append(QString::number(temp_x) + " ");
+//                }
+//                if(isSaveY)
+//                {
+//                    tofPeakNum[cloudIndex+1].append(QString::number(temp_y) + " ");
+//                }
+//                if(isSaveZ)
+//                {
+//                    tofPeakNum[cloudIndex+1].append(QString::number(temp_z));
+//                }
+//                tofPeakNum[cloudIndex+1].append("\n");
 
-            }
+//            }
 
-            QColor mColor = QColor(tofColor);
-            r = mColor.red();
-            g = mColor.green();
-            b = mColor.blue();
-            rgb = ((int)r << 16 | (int)g << 8 | (int)b);
+//            QColor mColor = QColor(tofColor);
+//            r = mColor.red();
+//            g = mColor.green();
+//            b = mColor.blue();
+//            rgb = ((int)r << 16 | (int)g << 8 | (int)b);
 
-            tempRgbCloud.points[cloudIndex].x = temp_x;
-            tempRgbCloud.points[cloudIndex].y = temp_y;
-            tempRgbCloud.points[cloudIndex].z = temp_z;
-            tempRgbCloud.points[cloudIndex].rgb = *reinterpret_cast<float*>(&rgb);
+//            tempRgbCloud.points[cloudIndex].x = temp_x;
+//            tempRgbCloud.points[cloudIndex].y = temp_y;
+//            tempRgbCloud.points[cloudIndex].z = temp_z;
+//            tempRgbCloud.points[cloudIndex].rgb = *reinterpret_cast<float*>(&rgb);
 
             /***************统计均值 、方差相关***********************/
             if(statisticStartFlag == true)
@@ -1003,20 +1496,6 @@ void DealUsb_msg::recvMsgSlot(QByteArray array)
                 tempStatisticTofPoints[cloudIndex].push_back(rawTof);
                 tempStatisticPeakPoints[cloudIndex].push_back(src_intensity);
             }
-
-            /******统计点云空间坐标最大值、最小值**********/
-            xMax = (temp_x>xMax) ? temp_x : xMax;
-            xMin = (temp_x<xMin) ? temp_x : xMin;
-            yMax = (temp_y>yMax) ? temp_y : yMax;
-            yMin = (temp_y<yMin) ? temp_y : yMin;
-            zMax = (temp_z>zMax) ? temp_z : zMax;
-            zMin = (temp_z<zMin) ? temp_z : zMin;
-
-            //统计二维图像
-            tofMax = (tof>tofMax) ? tof : tofMax;
-            tofMin = (tof<tofMin) ? tof : tofMin;
-            peakMax = (intensity>peakMax) ? intensity : peakMax;
-            peakMin = (intensity<peakMin) ? intensity : peakMin;
 
         }
         else
@@ -1037,15 +1516,30 @@ void DealUsb_msg::recvMsgSlot(QByteArray array)
 //!//tof值 x_pix的位置标号  y_pix的位置标号
 float DealUsb_msg::calibration_y(float cal_tof,int x_pix,int y_pix)
 {
-    if((cal_tof*LSB*1000) <= camera_dis)
-        return 0;
+//    if((cal_tof*LSB*1000) <= camera_dis)
+//        return 0;
 
-    float tofLSB = cal_tof/2.0 * LSB *1000;   //mm       ps:校正公式中的tof为接收到的真实TOF的一半    03-20 alter
-    float tmp1 = 4*tofLSB*tofLSB - camera_dis*camera_dis;
-    float tmp2 = 4*tofLSB*sqrt(pow(xf_position[x_pix]*miu_meter/f,2) + pow(yf_position[y_pix]*miu_meter/f,2) + 1 ) + 2*xf_position[x_pix]*miu_meter*camera_dis/f;
+//    float tofLSB = cal_tof/2.0 * LSB *1000;   //mm       ps:校正公式中的tof为接收到的真实TOF的一半    03-20 alter
+//    float tmp1 = 4*tofLSB*tofLSB - camera_dis*camera_dis;
+//    float tmp2 = 4*tofLSB*sqrt(pow(xf_position[x_pix]*miu_meter/f,2) + pow(yf_position[y_pix]*miu_meter/f,2) + 1 ) + 2*xf_position[x_pix]*miu_meter*camera_dis/f;
+//    float y = tmp1/tmp2;
+//    y = y/1000.0;   //mm->m
+//    return y;
+
+    if((cal_tof*LSB)<= camera_dis)
+    {
+        return 0;
+    }
+
+    float tofLSB = cal_tof * LSB;
+    float tmp1 = tofLSB*tofLSB - camera_dis*camera_dis;
+    float tmp2 = 2*tofLSB*sqrt(pow(xf_position[x_pix]*miu_meter/f,2) + pow(yf_position[y_pix]*miu_meter/f,2) + 1 ) + 2*xf_position[x_pix]*miu_meter*camera_dis/f;
     float y = tmp1/tmp2;
-    y = y/1000.0;   //mm->m
+    y = y/ 1000.0;
     return y;
+
+
+
 
 }
 
@@ -1076,7 +1570,7 @@ float DealUsb_msg::calibration_z(float cal_y,int x_pix,int y_pix)
     cal_y = cal_y*1000;
     float z = -1 * cal_y *yf_position[y_pix]*miu_meter/f;
     z = z/1000.0;      //mm->m
-    return -z;
+    return z;
 }
 
 //!
@@ -1094,10 +1588,22 @@ float DealUsb_msg::pileUp_calibration(int srcTof,float peak)
 
     //    return resTof;
 
+    float a = cal[0];
+    float b = cal[1];
+    float c = cal[2];
 
+    float biasTof = (a * pow(peak,b) +c)/15.55;
+
+    float resTof_ = srcTof + biasTof;
+//    qDebug()<<"a="<<a<<"  b="<<b<<"  c="<<c<<"peak ="<<peak<<"   biasTof="<<biasTof<<" dst = "<<QString::number(resTof_)<<"   src="<<srcTof;
+
+    return resTof_;
 
     //    float cal[] = {0, 18.608, 27.9257, 42.1217, 54.9701, 67.1999, 81.18035, 91.876348, 96.589933, 98.880245, 99.529313, 99.7605085, 99.9482045, 110};
     //    float val[] = {0,  0,     2.12,    11.37,   56.45,   69.755,  144.285,   180.995,   305.605,   447.575,  468.335,   523.65,      693.385,   800};
+
+
+//    qDebug()<<"  cal[0] = "<<cal[0]<<"  val[0]="<<val[0];
 
     if(cal.size()<1 || val.size()<1)
         return srcTof;
@@ -1272,24 +1778,31 @@ void DealUsb_msg::calibrate_offset_slot(int index,float mean_tof)
 
     float res_y_offset = calibration_real_dis - mean_tof;
     y_offset[index] = QString::number(res_y_offset);
-    if(ishave_Four == 16384)
+    if(ishave_Four == 4608)
     {
         QFile file("tofOffsetArray.txt");
         file.open(QIODevice::WriteOnly|QIODevice::Text);
         QTextStream out(&file);
         for(int i=0; i<16384; i++)
         {
+            if(y_offset[i].isEmpty())
+            {
+                y_offset[i] = QString::number(0);
+            }
+
             tofOffsetArray[i] = y_offset[i].toFloat();
             out<<y_offset[i].toLocal8Bit()<<endl;
         }
 
-        isAutoCalibration_flag = false;
+
         ishave_Four = 0;
         QString msg = "raw_Depth="+QString::number(calibration_real_dis)+",dst_Depth="+QString::number(mean_tof)+",offset="+QString::number(res_y_offset);
 
         QString DisplayNote = "[Auto Calibration success]:"+msg;
         emit send_cali_success_signal(msg);         //发送给设置自动校准的界面
         emit Display_log_signal(DisplayNote);       //在日志显示窗口显示校准信息
+
+        isAutoCalibration_flag = false;
     }
 
 }
@@ -1396,15 +1909,15 @@ void DealUsb_msg::readLocalPCDFile()
 
 
         /*********************pileUp 以及 offset 校正部分******************************/
-        //        rawTof = tof;
-        //        if(true == is_pileUp_flag)
-        //        {
-        //            tof = pileUp_calibration(rawTof,intensity);
-        //        }
-        //        after_pileup_tof = tof;                   //pileUp处理后的tof
-        //        tof = tof;
-        //        tof = tof + tofOffsetArray[cloudIndex];   //offset校正以后的tof
-        //        after_offset_tof = tof;
+        rawTof = tof;
+        if(true == is_pileUp_flag)
+        {
+            tof = pileUp_calibration(rawTof,intensity);
+        }
+        after_pileup_tof = tof;                   //pileUp处理后的tof
+        tof = tof;
+        tof = tof + tofOffsetArray[cloudIndex];   //offset校正以后的tof
+        after_offset_tof = tof;
 
 
 
@@ -1450,18 +1963,6 @@ void DealUsb_msg::readLocalPCDFile()
                 temp_x = 0;
                 temp_z = 0;
             }
-            QColor mColor = QColor(tofColor);
-            r = mColor.red();
-            g = mColor.green();
-            b = mColor.blue();
-            rgb = ((int)r << 16 | (int)g << 8 | (int)b);
-            tempRgbCloud.points[cloudIndex].x = temp_x;
-            tempRgbCloud.points[cloudIndex].y = temp_y;
-            tempRgbCloud.points[cloudIndex].z = temp_z;
-            tempRgbCloud.points[cloudIndex].rgb = *reinterpret_cast<float*>(&rgb);
-
-            //            qDebug()<<" cloudIndex = "<<cloudIndex<<endl;
-
 
 
             //            qDebug()<<"src_temp_x="<<temp_x<<"    src_temp_z="<<temp_z;
@@ -1484,6 +1985,24 @@ void DealUsb_msg::readLocalPCDFile()
                     vec_mean_y[cloudIndex].clear();
                 }
             }
+
+
+
+
+            QColor mColor = QColor(tofColor);
+            r = mColor.red();
+            g = mColor.green();
+            b = mColor.blue();
+            rgb = ((int)r << 16 | (int)g << 8 | (int)b);
+            tempRgbCloud.points[cloudIndex].x = temp_x;
+            tempRgbCloud.points[cloudIndex].y = temp_y;
+            tempRgbCloud.points[cloudIndex].z = temp_z;
+            tempRgbCloud.points[cloudIndex].rgb = *reinterpret_cast<float*>(&rgb);
+
+            //            qDebug()<<" cloudIndex = "<<cloudIndex<<endl;
+
+
+
 
 
             /************鼠标点击处显示信息相关*************/

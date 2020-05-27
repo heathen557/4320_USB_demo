@@ -35,12 +35,12 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->setupUi(this);
 
     //起始行
-    QStringList  lineNumList;
-    for(int i=0;i<64;i+=2)
-    {
-        lineNumList.append(QString::number(i));
-    }
-    ui->startLineNum_comboBox->addItems(lineNumList);
+//    QStringList  lineNumList;
+//    for(int i=0;i<64;i+=2)
+//    {
+//        lineNumList.append(QString::number(i));
+//    }
+//    ui->startLineNum_comboBox->addItems(lineNumList);
 
 
     ui->Hist_MA_action->setVisible(false);
@@ -135,6 +135,7 @@ void MainWindow::init_connect()
     connect(&fileSave_dia,&fileSave_Dialog::isSaveFlagSignal,this,&MainWindow::isSaveFlagSlot);
     connect(&fileSave_dia,&fileSave_Dialog::alter_fileSave_signal,dealMsg_obj,&DealUsb_msg::alter_fileSave_slot);
     connect(dealMsg_obj,&DealUsb_msg::saveTXTSignal,savePcd_obj,&savePCDThread::saveTXTSlot);
+    connect(savePcd_obj,&savePCDThread::send_savedFileIndex_signal,&fileSave_dia,&fileSave_Dialog::send_savedFileIndex_slot);
 
 
     //统计信息相关的槽函数
@@ -200,6 +201,10 @@ void MainWindow::init_connect()
     //读取积分次数相关的信号与槽函数的连接
     connect(this,&MainWindow::sendUsbToRead_inteTime_signal,recvUsbMsg_obj,&ReceUSB_Msg::sendUsbToRead_inteTime_slot);
     connect(recvUsbMsg_obj,&ReceUSB_Msg::returnSendUsbToRead_inteTime_signal,this,&MainWindow::returnSendUsbToRead_inteTime_slot);
+
+
+    //设置显示全部、两行取平均、三行取平均
+    connect(this,&MainWindow::sendShowMeanLine_signal,dealMsg_obj,&DealUsb_msg::sendShowMeanLine_slot);
 
 
 
@@ -485,7 +490,7 @@ void MainWindow::on_down_toolButton_clicked()
 //显示  peak的阈值
 void MainWindow::on_peakOffset_lineEdit_returnPressed()
 {
-    int peakOffset = ui->peakOffset_lineEdit->text().toInt();
+    float peakOffset = ui->peakOffset_lineEdit->text().toFloat();
     dealMsg_obj->peakOffset = peakOffset;
 
     qDebug()<<"peakOffset = "<<peakOffset;
@@ -867,3 +872,20 @@ void MainWindow::returnSendUsbToRead_inteTime_slot(int registInt,QString array)
 
 }
 
+//选择几行取平均的槽函数
+// index = 0  为 显示全部18行数据
+// index = 1  两行取平均
+// index = 2  三行取平均
+void MainWindow::on_showMeanLine_comboBox_currentIndexChanged(int index)
+{
+    qDebug()<<" on showMeanLine currentIndex changed = "<<index;
+    emit  sendShowMeanLine_signal(index);
+}
+
+
+//行间平均阈值
+void MainWindow::on_lineThreshold_lineEdit_returnPressed()
+{
+    int meanTof_thresHold = ui->lineThreshold_lineEdit->text().toInt();
+    dealMsg_obj->mean_offset = meanTof_thresHold;
+}

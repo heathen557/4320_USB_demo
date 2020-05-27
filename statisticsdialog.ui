@@ -61,7 +61,7 @@
    <item row="1" column="0">
     <widget class="QTabWidget" name="tabWidget">
      <property name="currentIndex">
-      <number>0</number>
+      <number>2</number>
      </property>
      <widget class="QWidget" name="tab">
       <attribute name="title">
@@ -122,6 +122,47 @@
         </widget>
        </item>
       </layout>
+     </widget>
+     <widget class="QWidget" name="tab_3">
+      <attribute name="title">
+       <string>2X4的方差</string>
+      </attribute>
+      <widget class="QGroupBox" name="groupBox">
+       <property name="geometry">
+        <rect>
+         <x>120</x>
+         <y>40</y>
+         <width>621</width>
+         <height>161</height>
+        </rect>
+       </property>
+       <property name="title">
+        <string>TofStd(31、32/126、127、128、129)</string>
+       </property>
+       <layout class="QGridLayout" name="gridLayout_5">
+        <item row="0" column="0">
+         <widget class="QPlainTextEdit" name="tof_std_plainTextEdit"/>
+        </item>
+       </layout>
+      </widget>
+      <widget class="QGroupBox" name="groupBox_2">
+       <property name="geometry">
+        <rect>
+         <x>120</x>
+         <y>250</y>
+         <width>611</width>
+         <height>181</height>
+        </rect>
+       </property>
+       <property name="title">
+        <string>peak_std</string>
+       </property>
+       <layout class="QGridLayout" name="gridLayout_6">
+        <item row="0" column="0">
+         <widget class="QPlainTextEdit" name="peak_std_plainTextEdit"/>
+        </item>
+       </layout>
+      </widget>
      </widget>
     </widget>
    </item>
