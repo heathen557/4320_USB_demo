@@ -533,92 +533,134 @@ void DealUsb_msg::tof_filter()
     {
         for(int imgY=0; imgY<64; imgY++)
         {
-            for(int i=-winSize/2;i<winSize/2;i++)
+            if((0!=src_tof[0][imgY]) && (0!=src_tof[1][imgY]) && (0!=src_tof[2][imgY]) && (0!=src_tof[3][imgY]) && (0!=src_tof[4][imgY])  && (0!=src_tof[5][imgY]))       //判断该行前5个数据，如果都为0 说明该行为空，未开始行
             {
-                for(int j=-winSize/2;j<winSize/2;j++)
+                for(int i=-winSize/2; i<winSize/2;i++)
                 {
-                    if(imgX+i>=0 && imgX+i<256 && imgY+j>=0 && imgY+j<64)
+                    for(int j=-winSize/2; j<winSize/2; j++)
                     {
-                        sortArray.push_back(src_tof[imgX+i][imgY+j]);   //存储符合peak的值
-                    }
-                }
-            }
-            int len = sortArray.size();
+                        if(imgX+i>=0 && imgX+i<256 && imgY+j>=0 && imgY+j<64)
+                        {
+                            sortArray.push_back(src_tof[imgX+i][imgY+j]);   //存储符合peak的值
+                        }// if imgX+i
+                    } // for j
+                } //for i
 
-            if(len>0)
-            {
-                sort(sortArray.begin(),sortArray.end());
-                int midNumTof = sortArray[len/2];   //获取到的中值
+                int len = sortArray.size();
 
-                gainIndex_tof = midNumTof * gainImage_tof;
-                if(gainIndex_tof<1024 && gainIndex_tof>=0)
-                    tofColor = qRgb(colormap[gainIndex_tof * 3], colormap[gainIndex_tof * 3 + 1], colormap[gainIndex_tof * 3 + 2]);
-                else
-                    tofColor = qRgb(colormap[1023 * 3], colormap[1023 * 3 + 1], colormap[1023 * 3 + 2]);
-                microQimage.setPixel(imgX,imgY,tofColor);         //TOF图像的赋值
-
-            }
-            sortArray.clear();
-
-            //以上是对二维图像采用的 窗口大小为3的窗口的滤波
-
-            for(int m=-win3D_size/2; m<win3D_size/2; m++ )
-            {
-                for(int n=-win3D_size/2; n<win3D_size/2; n++)
+                if(len>0)
                 {
-                    if(imgX+m>=0 && imgX+m<256 && imgY+n>=0 && imgY+n<64)
-                    {
-                        sortArray_3D.push_back(src_tof[imgX+m][imgY+n]);
+                    sort(sortArray.begin(),sortArray.end());
+                    int midNumTof = sortArray[len/2];   //获取到的中值
 
-                    }
+                    //把中值赋值给 lineMean_tof
+                    lineMean_tof[imgX][imgY] = midNumTof;
                 }
-            }
-            int len_3D = sortArray_3D.size();
-            if(len_3D > 0)
-            {
-                sort(sortArray_3D.begin(),sortArray_3D.end());
-                int midNumTof_3D = sortArray_3D[len_3D/2];   //获取到的中值
-
-                gainIndex_tof = midNumTof_3D * gainImage_tof;
-                if(gainIndex_tof<1024 && gainIndex_tof>=0)
-                    tofColor = qRgb(colormap[gainIndex_tof * 3], colormap[gainIndex_tof * 3 + 1], colormap[gainIndex_tof * 3 + 2]);
-                else
-                    tofColor = qRgb(colormap[1023 * 3], colormap[1023 * 3 + 1], colormap[1023 * 3 + 2]);
+                sortArray.clear();
 
 
-                //更新点云数据的值 以及颜色
-                cloudIndex = imgY*256 + imgX;
-                temp_y = calibration_y(midNumTof_3D,imgX,imgY);         //tof转换depth公式
-                temp_x = calibration_x(temp_y,imgX,imgY);
-                temp_z = calibration_z(temp_y,imgX,imgY);
-
-                //点云数据做校正integrateNum_
-                temp_y = temp_y + tofOffsetArray[cloudIndex];
-                temp_x = temp_x + calibration_x(tofOffsetArray[cloudIndex],imgX,imgY);
-                temp_z = temp_z + calibration_z(tofOffsetArray[cloudIndex],imgX,imgY);
-
-                if(temp_y<0)
-                {
-                    temp_y = 0;
-                    temp_x = 0;
-                    temp_z = 0;
-                }
-
-                QColor mColor = QColor(tofColor);
-                r = mColor.red();
-                g = mColor.green();
-                b = mColor.blue();
-                rgb = ((int)r << 16 | (int)g << 8 | (int)b);
-                tempRgbCloud.points[cloudIndex].x = temp_x;
-                tempRgbCloud.points[cloudIndex].y = temp_y;
-                tempRgbCloud.points[cloudIndex].z = temp_z;
-                tempRgbCloud.points[cloudIndex].rgb = *reinterpret_cast<float*>(&rgb);
-            }
-            sortArray_3D.clear();
+            } // if src_tof[0][imgY]
+        } //for imgY
+    }//for imgX
 
 
-        }//imgY
-    }//imgX
+
+
+
+
+
+
+
+//    for(int imgX=0; imgX<256; imgX++)
+//    {
+//        for(int imgY=0; imgY<64; imgY++)
+//        {
+//            for(int i=-winSize/2;i<winSize/2;i++)
+//            {
+//                for(int j=-winSize/2;j<winSize/2;j++)
+//                {
+//                    if(imgX+i>=0 && imgX+i<256 && imgY+j>=0 && imgY+j<64)
+//                    {
+//                        sortArray.push_back(src_tof[imgX+i][imgY+j]);   //存储符合peak的值
+//                    }
+//                }
+//            }
+//            int len = sortArray.size();
+
+//            if(len>0)
+//            {
+//                sort(sortArray.begin(),sortArray.end());
+//                int midNumTof = sortArray[len/2];   //获取到的中值
+
+//                gainIndex_tof = midNumTof * gainImage_tof;
+//                if(gainIndex_tof<1024 && gainIndex_tof>=0)
+//                    tofColor = qRgb(colormap[gainIndex_tof * 3], colormap[gainIndex_tof * 3 + 1], colormap[gainIndex_tof * 3 + 2]);
+//                else
+//                    tofColor = qRgb(colormap[1023 * 3], colormap[1023 * 3 + 1], colormap[1023 * 3 + 2]);
+//                microQimage.setPixel(imgX,imgY,tofColor);         //TOF图像的赋值
+
+//            }
+//            sortArray.clear();
+
+//            //以上是对二维图像采用的 窗口大小为3的窗口的滤波
+
+//            for(int m=-win3D_size/2; m<win3D_size/2; m++ )
+//            {
+//                for(int n=-win3D_size/2; n<win3D_size/2; n++)
+//                {
+//                    if(imgX+m>=0 && imgX+m<256 && imgY+n>=0 && imgY+n<64)
+//                    {
+//                        sortArray_3D.push_back(src_tof[imgX+m][imgY+n]);
+
+//                    }
+//                }
+//            }
+//            int len_3D = sortArray_3D.size();
+//            if(len_3D > 0)
+//            {
+//                sort(sortArray_3D.begin(),sortArray_3D.end());
+//                int midNumTof_3D = sortArray_3D[len_3D/2];   //获取到的中值
+
+//                gainIndex_tof = midNumTof_3D * gainImage_tof;
+//                if(gainIndex_tof<1024 && gainIndex_tof>=0)
+//                    tofColor = qRgb(colormap[gainIndex_tof * 3], colormap[gainIndex_tof * 3 + 1], colormap[gainIndex_tof * 3 + 2]);
+//                else
+//                    tofColor = qRgb(colormap[1023 * 3], colormap[1023 * 3 + 1], colormap[1023 * 3 + 2]);
+
+
+//                //更新点云数据的值 以及颜色
+//                cloudIndex = imgY*256 + imgX;
+//                temp_y = calibration_y(midNumTof_3D,imgX,imgY);         //tof转换depth公式
+//                temp_x = calibration_x(temp_y,imgX,imgY);
+//                temp_z = calibration_z(temp_y,imgX,imgY);
+
+//                //点云数据做校正integrateNum_
+//                temp_y = temp_y + tofOffsetArray[cloudIndex];
+//                temp_x = temp_x + calibration_x(tofOffsetArray[cloudIndex],imgX,imgY);
+//                temp_z = temp_z + calibration_z(tofOffsetArray[cloudIndex],imgX,imgY);
+
+//                if(temp_y<0)
+//                {
+//                    temp_y = 0;
+//                    temp_x = 0;
+//                    temp_z = 0;
+//                }
+
+//                QColor mColor = QColor(tofColor);
+//                r = mColor.red();
+//                g = mColor.green();
+//                b = mColor.blue();
+//                rgb = ((int)r << 16 | (int)g << 8 | (int)b);
+//                tempRgbCloud.points[cloudIndex].x = temp_x;
+//                tempRgbCloud.points[cloudIndex].y = temp_y;
+//                tempRgbCloud.points[cloudIndex].z = temp_z;
+//                tempRgbCloud.points[cloudIndex].rgb = *reinterpret_cast<float*>(&rgb);
+//            }
+//            sortArray_3D.clear();
+
+
+//        }//imgY
+//    }//imgX
 
 }
 
@@ -1155,9 +1197,11 @@ void DealUsb_msg::recvMsgSlot(QByteArray array)
         zMax = -10000;
 
 
-//        toShowOneLine_2_1_slot();    //两行直线合并
 
-//        toShowOneLine_3_1_slot();    //三行直线进行合并
+        if(true == isFilterFlag)
+        {
+            tof_filter();
+        }
 
 
         if(0 == showLineMeanInt)
@@ -1175,62 +1219,63 @@ void DealUsb_msg::recvMsgSlot(QByteArray array)
 
         // 1、将滤波功能放到这里进行实现，
         // 2、将滤波后的三维点云 同步到二维图像
-        if(true == isFilterFlag)
-        {
+//        if(true == isFilterFlag)
+//        {
 
-            tof_filter();    //只针对tof的中值滤波算法，并同时同步到三维点云
-            //            tof_filter_2();
-            /*******************开启滤波功能*********************************/
-            //先用直通滤波把所有零点重复的零点过滤掉
-            /* pcl::PassThrough<pcl::PointXYZRGB> pass;                      //创建滤波器对象
-            pass.setInputCloud(tempRgbCloud.makeShared());                //设置待滤波的点云
-            pass.setFilterFieldName("y");                                 //设置在Z轴方向上进行滤波
-            pass.setFilterLimits(0, 0.10);                                //设置滤波范围(从最高点向下0.10米去除)
-            pass.setFilterLimitsNegative(true);                           //保留
-            pass.filter(tempRgbCloud_pass);                                   //滤波并存储
-            if(tempRgbCloud_pass.size()<1)
-                return;
+//            tof_filter();    //只针对tof的中值滤波算法，并同时同步到三维点云
+//            //            tof_filter_2();
+//            /*******************开启滤波功能*********************************/
+//            //先用直通滤波把所有零点重复的零点过滤掉
+//            /* pcl::PassThrough<pcl::PointXYZRGB> pass;                      //创建滤波器对象
+//            pass.setInputCloud(tempRgbCloud.makeShared());                //设置待滤波的点云
+//            pass.setFilterFieldName("y");                                 //设置在Z轴方向上进行滤波
+//            pass.setFilterLimits(0, 0.10);                                //设置滤波范围(从最高点向下0.10米去除)
+//            pass.setFilterLimitsNegative(true);                           //保留
+//            pass.filter(tempRgbCloud_pass);                                   //滤波并存储
+//            if(tempRgbCloud_pass.size()<1)
+//                return;
 
-            //统计
-            tempRgbCloud_radius.clear();
-            pcl::StatisticalOutlierRemoval<pcl::PointXYZRGB> outrem(true);
-            outrem.setInputCloud(tempRgbCloud_pass.makeShared());
-            outrem.setMeanK(40);
-            outrem.setStddevMulThresh(0.25);
-            //40  0.1 不见前面噪点
-            outrem.filter(tempRgbCloud_radius);
-            int len = outrem.getRemovedIndices()->size();*/
-
-
-
-            //            QTime t1,t2;
-            //            pcl::VoxelGrid<pcl::PointXYZRGB> sor;//滤波处理对象
-            //            sor.setInputCloud(tempRgbCloud.makeShared());
-            //            sor.setLeafSize(0.03f, 0.03f, 0.03f);//设置滤波器处理时采用的体素大小的参数
-            //            sor.filter(tempRgbCloud_pass);
-
-            //            tempRgbCloud_radius.resize(0);
-            //            //            t1 = QTime::currentTime();
-            //            pcl::RadiusOutlierRemoval<pcl::PointXYZRGB> outrem;      //设置为true以后才能获取到滤出的噪点的 个数以及点的序列号
-            //            outrem.setInputCloud(tempRgbCloud.makeShared());              //设置输入点云
-            //            outrem.setRadiusSearch(0.05);              //设置在0.8半径的范围内找邻近点
-            //            outrem.setMinNeighborsInRadius(5);       //设置查询点的邻近点集数小于2的删除  30
-            //            outrem.filter (tempRgbCloud);//执行条件滤波，存储结果到cloud_filtered
+//            //统计
+//            tempRgbCloud_radius.clear();
+//            pcl::StatisticalOutlierRemoval<pcl::PointXYZRGB> outrem(true);
+//            outrem.setInputCloud(tempRgbCloud_pass.makeShared());
+//            outrem.setMeanK(40);
+//            outrem.setStddevMulThresh(0.25);
+//            //40  0.1 不见前面噪点
+//            outrem.filter(tempRgbCloud_radius);
+//            int len = outrem.getRemovedIndices()->size();*/
 
 
 
-            //            t2 = QTime::currentTime();
-            //            qDebug()<<"RadiusOutlierRemoval costs time = "<<  t1.msecsTo(t2) <<"ms"<<endl;
+//            //            QTime t1,t2;
+//            //            pcl::VoxelGrid<pcl::PointXYZRGB> sor;//滤波处理对象
+//            //            sor.setInputCloud(tempRgbCloud.makeShared());
+//            //            sor.setLeafSize(0.03f, 0.03f, 0.03f);//设置滤波器处理时采用的体素大小的参数
+//            //            sor.filter(tempRgbCloud_pass);
 
-            /*************************以上为滤波处理部分************************************************************/
-            mutex_3D.lock();
-            tofImage = microQimage;
-            intensityImage = macroQimage;
-            pcl::copyPointCloud(tempRgbCloud,pointCloudRgb);
-            mutex_3D.unlock();
-            /***************************************************************/
+//            //            tempRgbCloud_radius.resize(0);
+//            //            //            t1 = QTime::currentTime();
+//            //            pcl::RadiusOutlierRemoval<pcl::PointXYZRGB> outrem;      //设置为true以后才能获取到滤出的噪点的 个数以及点的序列号
+//            //            outrem.setInputCloud(tempRgbCloud.makeShared());              //设置输入点云
+//            //            outrem.setRadiusSearch(0.05);              //设置在0.8半径的范围内找邻近点
+//            //            outrem.setMinNeighborsInRadius(5);       //设置查询点的邻近点集数小于2的删除  30
+//            //            outrem.filter (tempRgbCloud);//执行条件滤波，存储结果到cloud_filtered
 
-        }else{                      //不进行滤波
+
+
+//            //            t2 = QTime::currentTime();
+//            //            qDebug()<<"RadiusOutlierRemoval costs time = "<<  t1.msecsTo(t2) <<"ms"<<endl;
+
+//            /*************************以上为滤波处理部分************************************************************/
+//            mutex_3D.lock();
+//            tofImage = microQimage;
+//            intensityImage = macroQimage;
+//            pcl::copyPointCloud(tempRgbCloud,pointCloudRgb);
+//            mutex_3D.unlock();
+//            /***************************************************************/
+
+//        }else
+        {                      //不进行滤波
             mutex_3D.lock();
             tofImage = microQimage;
             intensityImage = macroQimage;
